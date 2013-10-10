@@ -1,0 +1,32 @@
+{
+  "name": "dupfindr",
+  "version": "0.0.0",
+  "description": "Locate and delete duplicate scrobbles from Last.fm",
+  "main": "Gruntfile.js",
+  "dependencies": {
+    "express": "~3.4.0",
+    "underscore": "~1.5.2",
+    "request": "~2.27.0",
+    "jade": "~0.35.0"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-contrib-watch": "~0.5.3",
+    "grunt-contrib-sass": "~0.5.0",
+    "grunt-autoprefixer": "~0.3.0",
+    "grunt-contrib-copy": "~0.4.1",
+    "grunt-contrib-clean": "~0.5.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "last.fm",
+    "last",
+    "duplicate",
+    "delete",
+    "scrobble"
+  ],
+  "author": "Glen Cheney",
+  "license": "BSD-2-Clause"
+}
