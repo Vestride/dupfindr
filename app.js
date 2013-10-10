@@ -5,10 +5,11 @@ var express = require('express');
 var app = express();
 var request = require('request');
 var _ = require('underscore');
+var crypto = require('crypto');
 
 var API_KEY = '390660b5be6817c32953e61f88d633a6';
 var SECRET = '818feb0f4cd9d9feb6edb36d8861694c';
-var BASE_URL = 'http://ws.audioscrobbler.com/2.0/';
+var BASE_URL = 'http://ws.audioscrobbler.com/2.0/?';
 var user = 'shadowolf19';
 var format = 'json';
 
@@ -16,11 +17,11 @@ var API_ARG = '&api_key=' + API_KEY;
 var USER_ARG = '&user=' + user;
 var FORMAT_ARG = '&format=' + format;
 
-var GET_RECENT_TRACKS = BASE_URL + '?method=user.getrecenttracks' + API_ARG + USER_ARG + FORMAT_ARG +
+var GET_RECENT_TRACKS = BASE_URL + 'method=user.getrecenttracks' + API_ARG + USER_ARG + FORMAT_ARG +
     '&limit=10&page=1';
 
 var artist = encodeURIComponent('Macklemore & Ryan Lewis');
-var GET_ARTIST_TRACKS = BASE_URL + '?method=user.getartisttracks' + API_ARG + USER_ARG + FORMAT_ARG +
+var GET_ARTIST_TRACKS = BASE_URL + 'method=user.getartisttracks' + API_ARG + USER_ARG + FORMAT_ARG +
     '&artist=' + artist + '&limit=100&page=1';
 
 
@@ -57,22 +58,85 @@ function getDuplicates(tracks) {
   return duplicates;
 }
 
+
+
+function md5(str) {
+  return crypto.createHash('md5').update(str).digest('hex');
+}
+
+
+function getLastfmSignature(userAuthToken, method, sessionKey) {
+
+  var params = [
+    'api_key' + API_KEY,
+    'method' + method,
+    'token' + userAuthToken
+  ];
+
+  if ( sessionKey ) {
+    params.push('&sk=' + sessionKey);
+  }
+
+  var signature = params.sort().join('') + SECRET;
+
+  console.log(signature);
+
+  return md5(signature);
+}
+
+
 app.engine('jade', require('jade').renderFile);
 
 app.set('view engine', 'jade');
 
-// GET /javascripts/jquery.js
-// GET /style.css
-// GET /favicon.ico
 app.use(express.static(__dirname + '/public'));
 
 // Request body parsing middleware supporting JSON and urlencoded requests.
 app.use(express.json());
 app.use(express.urlencoded());
 
+app.use(express.cookieParser('scrobblescrewups'));
+// Populates req.session
+app.use(express.session());
+
+
+
+app.locals({
+  API_KEY: API_KEY,
+
+});
+
+var parser = new xml2js.Parser();
+// parser.parseString(data, function (err, result) {
+//   console.dir(result);
+//   console.log('Done');
+// });
 
 app.get('/', function(req, res) {
-  res.render('index');
+  var data = {
+    session: req.session
+  };
+
+  if (req.session && req.session.LFM_TOKEN) {
+    var signature = getLastfmSignature(req.session.LFM_TOKEN, 'auth.getsession');
+    var lfmGetSession = BASE_URL + 'api_sig=' + signature + API_ARG + '&token=' + req.session.LFM_TOKEN;
+
+
+  } else {
+    var requestedUrl = req.protocol + '://' + req.get('Host') + req.url;
+    var authUrl = 'http://www.last.fm/api/auth/?api_key=' + API_KEY +
+        '&cb=' + requestedUrl + 'auth';
+
+    data.lfmAuthUrl = authUrl;
+  }
+
+  res.render('index', data);
+});
+
+app.get('/auth', function(req, res) {
+  var token = req.query.token;
+  req.session.LFM_TOKEN = token;
+  res.redirect('/');
 });
 
 

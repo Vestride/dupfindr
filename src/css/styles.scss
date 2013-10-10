@@ -1,9 +1,13 @@
 @import "normalize";
-@import "bootstrap";
+@import "bootstrap-grid";
 @import "topcoat";
 
 
-.fake {
-  box-shadow: 0 0 0 4px black;
+h1 {
+  font-weight: 300;
+}
+
+h2 {
+  font-weight: 300;
 }
 

@@ -1,8 +1,38 @@
 extends layout
 
+
 block content
+
+  - console.log('last.fm token: ' + session.LFM_TOKEN)
+
+  mixin authFlow()
+    - var href = locals.lfmAuthUrl
+    .container
+      .row
+        .col-sm-12
+          p You need to authenticate this app from Last.fm before you can use it.
+          a.topcoat-button--large--cta(href=href)
+            | Authenticate
+
+
+  mixin authenticated()
+    .container
+      .row
+        .col-sm-12
+          h2 Cool, now we can delete scrobbles!
+
+      form.row(method="get", action="/lfm")
+        .col-sm-12
+          input.topcoat-text-input--large(type="text", name="artist", placeholder="Artist Name")
+          input.topcoat-button--large--cta(type="submit", value="Find Duplicates")
 
   .container
     .row
       .col-sm-12
-        h1 Index.jade
+        h1 Last.fm Duplicate Findr
+
+
+  if locals.session && locals.session.LFM_TOKEN
+    +authenticated();
+  else
+    +authFlow()
