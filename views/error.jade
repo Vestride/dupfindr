@@ -1,0 +1,14 @@
+extends layout
+
+block content
+
+  .container
+    .row
+      .col-sm-12
+        h1 Oops, something went wrong
+
+  .container
+    .row
+      .col-sm-12
+        p= 'Error code: ' + locals.code
+        p= locals.msg

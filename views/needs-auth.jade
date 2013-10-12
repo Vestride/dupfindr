@@ -1,0 +1,15 @@
+extends layout
+
+block content
+
+  .container
+    .row
+      .col-sm-12
+        h1 Last.fm Duplicate Findr
+
+  - var href = locals.lfmAuthUrl
+  .container
+    .row
+      .col-sm-12
+        p You need to authenticate this app from Last.fm before you can use it.
+        a.topcoat-button--large--cta(href=href) Authenticate

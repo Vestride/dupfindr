@@ -1,27 +1,24 @@
 /*global require, __dirname */
 
-// var http = require('http');
+// var util = require('util');
 var express = require('express');
 var app = express();
 var request = require('request');
-var _ = require('underscore');
-var crypto = require('crypto');
+// var _ = require('underscore');
+var xml2js = require('xml2js');
+var common = require('./common');
+var lastfm = require('./lastfm');
 
-var API_KEY = '390660b5be6817c32953e61f88d633a6';
-var SECRET = '818feb0f4cd9d9feb6edb36d8861694c';
-var BASE_URL = 'http://ws.audioscrobbler.com/2.0/?';
-var user = 'shadowolf19';
-var format = 'json';
 
-var API_ARG = '&api_key=' + API_KEY;
-var USER_ARG = '&user=' + user;
-var FORMAT_ARG = '&format=' + format;
+var API_ARG = '&api_key=' + common.API_KEY;
+var USER_ARG = '&user=' + 'shadowolf19';
+var FORMAT_ARG = '&format=json';
 
-var GET_RECENT_TRACKS = BASE_URL + 'method=user.getrecenttracks' + API_ARG + USER_ARG + FORMAT_ARG +
+var GET_RECENT_TRACKS = common.BASE_URL + 'method=user.getrecenttracks' + API_ARG + USER_ARG + FORMAT_ARG +
     '&limit=10&page=1';
 
 var artist = encodeURIComponent('Macklemore & Ryan Lewis');
-var GET_ARTIST_TRACKS = BASE_URL + 'method=user.getartisttracks' + API_ARG + USER_ARG + FORMAT_ARG +
+var GET_ARTIST_TRACKS = common.BASE_URL + 'method=user.getartisttracks' + API_ARG + USER_ARG + FORMAT_ARG +
     '&artist=' + artist + '&limit=100&page=1';
 
 
@@ -60,31 +57,6 @@ function getDuplicates(tracks) {
 
 
 
-function md5(str) {
-  return crypto.createHash('md5').update(str).digest('hex');
-}
-
-
-function getLastfmSignature(userAuthToken, method, sessionKey) {
-
-  var params = [
-    'api_key' + API_KEY,
-    'method' + method,
-    'token' + userAuthToken
-  ];
-
-  if ( sessionKey ) {
-    params.push('&sk=' + sessionKey);
-  }
-
-  var signature = params.sort().join('') + SECRET;
-
-  console.log(signature);
-
-  return md5(signature);
-}
-
-
 app.engine('jade', require('jade').renderFile);
 
 app.set('view engine', 'jade');
@@ -102,35 +74,57 @@ app.use(express.session());
 
 
 app.locals({
-  API_KEY: API_KEY,
-
+  API_KEY: common.API_KEY
 });
 
 var parser = new xml2js.Parser();
-// parser.parseString(data, function (err, result) {
-//   console.dir(result);
-//   console.log('Done');
-// });
 
 app.get('/', function(req, res) {
-  var data = {
-    session: req.session
-  };
 
+  // User has authorized the app
   if (req.session && req.session.LFM_TOKEN) {
-    var signature = getLastfmSignature(req.session.LFM_TOKEN, 'auth.getsession');
-    var lfmGetSession = BASE_URL + 'api_sig=' + signature + API_ARG + '&token=' + req.session.LFM_TOKEN;
+    var token = req.session.LFM_TOKEN;
+    var method = 'auth.getSession';
+    var signature = lastfm.getSignature(token, method);
+    var url = lastfm.getSignedCall(token, signature, null, {
+      method: method
+    });
 
+    console.log('requesting: ' + url);
 
+    // Make the request to Last.fm.
+    request(url, function(err, response, body) {
+      console.log('got session response:', body);
+
+      // Parse XML response.
+      parser.parseString(body, function (err, result) {
+
+        // Make sure last.fm didn't return an error
+        if ( result.lfm.$.status === 'ok' ) {
+          req.session.username = result.lfm.session.name;
+          req.session.sk = result.lfm.session.key;
+          res.render('index', {});
+        } else {
+          res.render('error', lastfm.getError(result, 'auth.getSession'));
+        }
+      });
+    });
+
+  // User hasn't authorized the app
   } else {
-    var requestedUrl = req.protocol + '://' + req.get('Host') + req.url;
-    var authUrl = 'http://www.last.fm/api/auth/?api_key=' + API_KEY +
-        '&cb=' + requestedUrl + 'auth';
-
-    data.lfmAuthUrl = authUrl;
+    res.redirect('/needs-authentication');
   }
+});
 
-  res.render('index', data);
+app.get('/needs-authentication', function(req, res) {
+  var requestedUrl = req.protocol + '://' + req.get('Host');// + req.url;
+  console.log('requested url: ' + requestedUrl);
+  var authUrl = 'http://www.last.fm/api/auth/?api_key=' + common.API_KEY +
+      '&cb=' + requestedUrl + '/auth';
+
+  res.render('needs-auth', {
+    lfmAuthUrl: authUrl
+  });
 });
 
 app.get('/auth', function(req, res) {
@@ -142,6 +136,8 @@ app.get('/auth', function(req, res) {
 
 app.get('/lfm', function(req, res) {
   console.log('getting recent tracks...');
+
+  var artist = req.query.artist;
 
   request(GET_ARTIST_TRACKS, function(error, response, body) {
 
