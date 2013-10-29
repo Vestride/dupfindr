@@ -2,6 +2,9 @@
 @import "bootstrap-grid";
 @import "topcoat";
 
+body {
+  padding-bottom: 100px;
+}
 
 h1 {
   font-weight: 300;
@@ -11,3 +14,43 @@ h2 {
   font-weight: 300;
 }
 
+
+.table {
+  width: 100%;
+}
+
+.table tr {
+  transition: .15s;
+}
+
+.table tr:nth-child(odd) {
+  background-color: #EEE;
+}
+
+.table tr:hover {
+  background-color: rgba(190, 190, 190, 0.6);
+}
+
+.table td {
+  padding: 6px 10px;
+}
+
+
+.danger {
+  border-color: #AB4C3F;
+  background-color: #DF392A;
+}
+
+.danger:focus,
+.danger:hover, {
+  background-color: hsl(15, 74%, 52%);
+}
+
+.danger:active {
+  background-color: hsl(5, 74%, 40%);
+}
+
+.t2 .topcoat-notification {
+  font-size: 1rem;
+  vertical-align: middle;
+}

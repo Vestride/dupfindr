@@ -13,8 +13,10 @@ block content
       .col-sm-12
         h2 Cool, now we can delete scrobbles!
 
-    form.row(method="get", action="/lfm")
+    form.row(method="get", action="/duplicates-for-artist")
       .col-sm-12
-        input.topcoat-text-input--large(type="text", name="artist", placeholder="Artist Name")
+        input.topcoat-text-input--large(type="text", name="artist", placeholder="Artist Name",
+            value="Macklemore & Ryan Lewis")
+        br
         br
         input.topcoat-button--large--cta(type="submit", value="Find Duplicates")

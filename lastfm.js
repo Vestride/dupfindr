@@ -2,7 +2,7 @@
 // lastfm.js
 
 /**
- * @fileOverview Things that deal with the Last.fm API.
+ * @fileoverview Things that deal with the Last.fm API.
  */
 
 var common = require('./common');
@@ -33,33 +33,71 @@ exports.getSignature = function(userAuthToken, method, sessionKey) {
 };
 
 
-exports.getSignedCall = function(userAuthToken, signature, sessionKey, params) {
-  var base = common.BASE_URL + 'api_sig=' + signature + '&api_key=' + common.API_KEY + '&token=' + userAuthToken;
+exports.getSignedCall = function(signature, sessionKey, params, userAuthToken) {
+
+  if ( !signature ) {
+    console.log('no signature, grabbing it...');
+
+    // Should this be stored in a cookie/localStorage?
+    // It uses the user token, but then the user token isn't needed again, yet this is.
+    // Docs also say to save the session key to db.
+    signature = exports.getSignature( userAuthToken, params.method, sessionKey );
+  }
+
+  var url = common.BASE_URL + 'api_sig=' + signature + '&api_key=' + common.API_KEY;
+
+  if ( userAuthToken ) {
+    url += '&token=' + userAuthToken;
+  }
 
   if ( sessionKey ) {
-    base += '&sk=' + sessionKey;
+    url += '&sk=' + sessionKey;
   }
 
   if ( params ) {
     for (var key in params ) {
-      base += '&' + key + '=' + params[ key ];
+      url += '&' + key + '=' + encodeURIComponent( params[ key ] );
     }
   }
 
-  return base;
+  return url;
 };
 
+
+exports.getCall = function(params) {
+  var url = common.BASE_URL + 'api_key=' + common.API_KEY;
+
+  if ( params ) {
+    for (var key in params ) {
+      url += '&' + key + '=' + encodeURIComponent( params[ key ] );
+    }
+  }
+
+  return url;
+};
 
 
 /**
  * Returns an object representing the error from last fm.
  * @param {Object} xmljs XML which has been parsed into a js object.
+ * @param {stromg} [method] Optional method which was used in the API call.
  * @return {Object} Response object.
  */
-exports.getError = function(xmljs) {
+exports.getError = function(xmljs, method) {
+  var msg = xmljs.lfm.error[0]._.trim();
+
+  if ( method ) {
+    msg += '. Method was: ' + method;
+  }
+
   return {
     code: xmljs.lfm.error[0].$.code,
-    msg: xmljs.lfm.error[0]._.trim()
+    msg: msg
   };
 };
+
+
+// exports.removeScrobble = function(artist, track, timestamp, sessionKey) {
+
+// };
 
