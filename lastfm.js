@@ -7,44 +7,70 @@
 
 var common = require('./common');
 var crypto = require('crypto');
+var _ = require('underscore');
 
 function md5(str) {
   return crypto.createHash('md5').update(str).digest('hex');
 }
 
 
-exports.getSignature = function(userAuthToken, method, sessionKey) {
+exports.getApiSignature = function(params, userAuthToken) {
+  // Break the reference.
+  params = _.clone(params);
 
+  // Cannot have `format` nor `callback` in the parameters.
+  if ( params.format ) {
+    delete params.format;
+  }
+  if ( params.callback ) {
+    delete params.callback;
+  }
+
+  // Add api key.
+  params.api_key = common.API_KEY;
+
+  // Is the user auth token optional for everything but the first call?
+  if ( userAuthToken ) {
+    params.token = userAuthToken;
+  }
+
+  // Alphabetically sort keys.
+  var keys = [];
+  for ( var key in params ) {
+    keys.push(key);
+  }
+  keys.sort();
+
+  // Create concatenated string of <name><value>.
+  var paramsList = _.reduce(keys, function(memo, key) {
+    return memo + key + params[ key ];
+  }, '');
+
+  var signature = paramsList + common.SECRET;
+
+  console.log('params list:', paramsList);
+  console.log('signature: ' + signature);
+
+  return md5(signature);
+
+  /*
   var params = [
     'api_key' + common.API_KEY,
     'method' + method,
     'token' + userAuthToken
   ];
 
-  if ( sessionKey ) {
-    params.push('&sk=' + sessionKey);
-  }
-
   var signature = params.sort().join('') + common.SECRET;
-
-  console.log('signature: ' + signature);
-
-  return md5(signature);
+  */
 };
 
 
-exports.getSignedCall = function(signature, sessionKey, params, userAuthToken) {
-
-  if ( !signature ) {
-    console.log('no signature, grabbing it...');
-
-    // Should this be stored in a cookie/localStorage?
-    // It uses the user token, but then the user token isn't needed again, yet this is.
-    // Docs also say to save the session key to db.
-    signature = exports.getSignature( userAuthToken, params.method, sessionKey );
-  }
+exports.getSignedCall = function(params, sessionKey, userAuthToken) {
+  var signature = exports.getApiSignature( params, userAuthToken );
 
   var url = common.BASE_URL + 'api_sig=' + signature + '&api_key=' + common.API_KEY;
+
+  // add format = json
 
   if ( userAuthToken ) {
     url += '&token=' + userAuthToken;
@@ -55,7 +81,7 @@ exports.getSignedCall = function(signature, sessionKey, params, userAuthToken) {
   }
 
   if ( params ) {
-    for (var key in params ) {
+    for ( var key in params ) {
       url += '&' + key + '=' + encodeURIComponent( params[ key ] );
     }
   }
@@ -84,14 +110,14 @@ exports.getCall = function(params) {
  * @return {Object} Response object.
  */
 exports.getError = function(xmljs, method) {
-  var msg = xmljs.lfm.error[0]._.trim();
+  var msg = xmljs.lfm.error._.trim();
 
   if ( method ) {
     msg += '. Method was: ' + method;
   }
 
   return {
-    code: xmljs.lfm.error[0].$.code,
+    code: xmljs.lfm.error.$.code,
     msg: msg
   };
 };

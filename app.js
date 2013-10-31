@@ -1,6 +1,3 @@
-/*global require, __dirname */
-
-// var util = require('util');
 var express = require('express');
 var app = express();
 var request = require('request');
@@ -8,22 +5,12 @@ var _ = require('underscore');
 var xml2js = require('xml2js');
 var common = require('./common');
 var lastfm = require('./lastfm');
+var Engine = require('tingodb')();
+var db = new Engine.Db('./db', {});
 
-
-var API_ARG = '&api_key=' + common.API_KEY;
-var USER_ARG = '&user=' + 'shadowolf19';
-var FORMAT_ARG = '&format=json';
-
-// var GET_RECENT_TRACKS = common.BASE_URL + 'method=user.getrecenttracks' + API_ARG + USER_ARG + FORMAT_ARG +
-//     '&limit=10&page=1';
-
-// var artist = encodeURIComponent('Macklemore & Ryan Lewis');
-// var GET_ARTIST_TRACKS = common.BASE_URL + 'method=user.getartisttracks' + API_ARG + USER_ARG + FORMAT_ARG +
-//     '&artist=' + artist + '&limit=100&page=1';
-
-
-app.listen(3000);
-console.log('listening on port 3000');
+var port = 3000;
+app.listen(port);
+console.log('listening on port ' + port);
 
 
 /**
@@ -143,9 +130,92 @@ var parser = new xml2js.Parser({
 });
 
 
+db.createCollection('users', function(err/*, collection*/) {
+  if (err) {
+    console.log('error creating users collection');
+  } else {
+    console.log('users collection created');
+  }
+});
+
+
 function restrict(req, res, next) {
-  if ( req.session.LFM_TOKEN ) {
+  console.log('---restrict---');
+
+  // Session key available. The user has authorized our app.
+  if ( req.session.sk ) {
     next();
+
+  // New session, but they've authenticated before.
+  } else if ( req.cookies.username ) {
+    var collection = db.collection('users');
+
+    collection.findOne({ username: req.cookies.username }, function(err, user) {
+      if (err) {
+        console.log('error getting ' + req.cookies.username);
+        console.log(err);
+      }
+
+      req.session.username = user.username;
+      req.session.sk = user.sessionKey;
+
+      next();
+    });
+
+
+  // The token is available after the user authorizes the app,
+  // but the session isn't available yet.
+  } else if ( req.session.LFM_TOKEN ) {
+
+    var method = 'auth.getSession';
+    var url = lastfm.getSignedCall({
+      method: method
+    }, null, req.session.LFM_TOKEN);
+
+    console.log('requesting: ' + url);
+
+    // Make the request to Last.fm for the session.
+    request(url, function(err, response, body) {
+      console.log('got session response:');
+      console.log(body);
+
+      // Parse XML response from Last.fm. auth.getSession responses are only XML :(
+      parser.parseString(body, function(err, result) {
+
+        // Make sure last.fm didn't return an error
+        if ( result.lfm.$.status === 'ok' ) {
+          var collection = db.collection('users');
+          var doc = {
+            username: result.lfm.session.name,
+            sessionKey: result.lfm.session.key
+          };
+
+          // Save username in a cookie so the app can check if the user already has a
+          // session key stored. That's probably not safe...
+          var thirtyDays = 30 * 24 * 60 * 60 * 1000;
+          res.cookie('username', doc.username, { maxAge: thirtyDays, httpOnly: false });
+
+          // Ugh, I have no idea what i'm doing...
+          req.session.username = doc.username;
+          req.session.sk = doc.sessionKey;
+          req.session.LFM_TOKEN = null;
+
+          // Insert new user.
+          collection.insert(doc, {w:1}, function(err/*, result*/) {
+            if (err) {
+              console.log('error inserting recored for:', doc);
+              console.log(err);
+            }
+          });
+
+          next();
+        } else {
+          res.render('error', lastfm.getError(result, method));
+        }
+      });
+    });
+
+  // User needs to authenticate the app.
   } else {
     // req.session.error = 'Access denied!';
     res.redirect('/needs-authentication');
@@ -153,34 +223,9 @@ function restrict(req, res, next) {
 }
 
 app.get('/', restrict, function(req, res) {
-
-  var token = req.session.LFM_TOKEN;
-  var method = 'auth.getSession';
-  // var signature = lastfm.getSignature(token, method);
-  var url = lastfm.getSignedCall(null, null, {
-    method: method
-  }, token);
-
-  console.log('requesting: ' + url);
-
-  // Make the request to Last.fm.
-  request(url, function(err, response, body) {
-    console.log('got session response:', body);
-
-    // Parse XML response.
-    parser.parseString(body, function (err, result) {
-
-      // Make sure last.fm didn't return an error
-      if ( result.lfm.$.status === 'ok' ) {
-        req.session.username = result.lfm.session.name;
-        req.session.sk = result.lfm.session.key;
-        res.render('index', {});
-      } else {
-        res.render('error', lastfm.getError(result, method));
-      }
-    });
-  });
+  res.render('index', {});
 });
+
 
 app.get('/needs-authentication', function(req, res) {
   var requestedUrl = req.protocol + '://' + req.get('Host');// + req.url;
@@ -253,6 +298,20 @@ app.get('/remove/:artist/:track/:timestamp', restrict, function(req, res) {
   // request.post();
 
   res.redirect('back');
+});
+
+
+app.get('/recommended-artists', restrict, function(req, res) {
+  var url = lastfm.getSignedCall({
+    method: 'user.getRecommendedArtists'
+  }, req.session.sk);
+
+  request.post(url, function(err, response, body) {
+    console.log('got recommended artists response:');
+    console.log(body);
+
+    res.render('index', {});
+  });
 });
 
 
