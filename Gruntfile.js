@@ -25,6 +25,16 @@ module.exports = function(grunt) {
 
 
     copy: {
+      bower: {
+        files: [
+          {
+            expand: true,
+            cwd: 'bower_components/requirejs/',
+            src: ['require.js'],
+            dest: 'public/js/'
+          }
+        ]
+      },
       js: {
         files: [
           {
@@ -97,5 +107,18 @@ module.exports = function(grunt) {
     grunt.task.run('autoprefixer:main');
     grunt.task.run('clean:temp');
   });
+
+
+
+  grunt.registerTask('build', function() {
+    grunt.task.run('clean');
+    grunt.task.run('copy:bower');
+    grunt.task.run('copy:js');
+    grunt.task.run('copy:assets');
+    grunt.task.run('css');
+  });
+
+
+
 
 };

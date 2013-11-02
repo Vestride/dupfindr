@@ -1,5 +1,18 @@
 extends layout
 
+mixin trackRow(track)
+  td= track.name
+  td= track.date.text
+  td
+    a(href=track.listing, target="_blank") View on Last.fm
+  td
+    button(class="topcoat-button--large--cta danger js-remove",
+        data-track=track.name,
+        data-artist=track.artist.name,
+        data-timestamp=track.date.uts,
+        title="Remove this scrobble")
+      | Remove
+
 
 block content
 
@@ -16,12 +29,7 @@ block content
         h2.t2
           span.topcoat-notification= duplicates.length
           | !{ ' Duplicates.' }
-        table.table
+        table.table.duplicate-list
           each duplicate in locals.duplicates
             tr
-              td= duplicate.name
-              td= duplicate.date['#text']
-              td
-                a(href=duplicate.listing, target="_blank") View on Last.fm
-              td
-                a.topcoat-button--large--cta.danger(href=duplicate.removeUrl, title="Remove this scrobble") Remove
+              +trackRow(duplicate)

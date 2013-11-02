@@ -8,13 +8,81 @@
 var common = require('./common');
 var crypto = require('crypto');
 var _ = require('underscore');
+var request = require('request');
 
 function md5(str) {
   return crypto.createHash('md5').update(str).digest('hex');
 }
 
+// https://github.com/jammus/lastfm-node/blob/master/lib/lastfm/lastfm-request.js
+var WRITE_METHODS = [
+  'album.addtags', 'album.removetag', 'album.share',
+  'artist.addtags', 'artist.removetag', 'artist.share', 'artist.shout',
+  'event.attend', 'event.share', 'event.shout',
+  'library.addalbum', 'library.addartist', 'library.addtrack',
+  'library.removealbum', 'library.removeartist', 'library.removetrack', 'library.removescrobble',
+  'playlist.addtrack', 'playlist.create',
+  'radio.tune',
+  'track.addtags', 'track.ban', 'track.love', 'track.removetag',
+  'track.scrobble', 'track.share', 'track.unban', 'track.unlove',
+  'track.updatenowplaying',
+  'user.shout'
+];
+var SIGNED_METHODS = [
+  'auth.getmobilesession', 'auth.getsession', 'auth.gettoken',
+  'radio.getplaylist',
+  'user.getrecentstations', 'user.getrecommendedartists', 'user.getrecommendedevents'
+];
 
-exports.getApiSignature = function(params, userAuthToken) {
+
+function isWriteMethod( method ) {
+  return WRITE_METHODS.indexOf( method ) > -1;
+}
+
+function isSignedMethod( method ) {
+  return SIGNED_METHODS.indexOf( method ) > -1;
+}
+
+function requiresSignature( method ) {
+  return isWriteMethod( method ) || isSignedMethod(method);
+}
+
+
+
+exports.request = function(params, fn) {
+  var verb = 'get';
+  var firstParam;
+  var requestParams = exports.getCall( params, requiresSignature( params.method ) );
+
+  if ( isWriteMethod( params.method ) ) {
+    verb = 'post';
+
+    firstParam = {
+      uri: common.BASE_URL,
+      form: requestParams
+    };
+  } else {
+    firstParam = common.BASE_URL + '?';
+    for ( var key in requestParams ) {
+      firstParam += '&' + key + '=' + encodeURIComponent( params[ key ] );
+    }
+  }
+
+  console.log('========= ' + verb + ': ', firstParam);
+
+  request[verb](firstParam, function(err, response, body) {
+    console.log('last.fm response:', body.length > 200 ? body.substring(0, 200) + '| truncated' : body);
+    // console.log(body);
+
+    var result = JSON.parse(body);
+    var error = err || result.error ? result : null;
+
+    fn(error, result);
+  });
+};
+
+
+exports.getApiSignature = function(params) {
   // Break the reference.
   params = _.clone(params);
 
@@ -24,14 +92,6 @@ exports.getApiSignature = function(params, userAuthToken) {
   }
   if ( params.callback ) {
     delete params.callback;
-  }
-
-  // Add api key.
-  params.api_key = common.API_KEY;
-
-  // Is the user auth token optional for everything but the first call?
-  if ( userAuthToken ) {
-    params.token = userAuthToken;
   }
 
   // Alphabetically sort keys.
@@ -49,81 +109,22 @@ exports.getApiSignature = function(params, userAuthToken) {
   var signature = paramsList + common.SECRET;
 
   console.log('params list:', paramsList);
-  console.log('signature: ' + signature);
 
   return md5(signature);
-
-  /*
-  var params = [
-    'api_key' + common.API_KEY,
-    'method' + method,
-    'token' + userAuthToken
-  ];
-
-  var signature = params.sort().join('') + common.SECRET;
-  */
 };
 
 
-exports.getSignedCall = function(params, sessionKey, userAuthToken) {
-  var signature = exports.getApiSignature( params, userAuthToken );
+exports.getCall = function(params, isSigned) {
+  params.api_key = common.API_KEY;
 
-  var url = common.BASE_URL + 'api_sig=' + signature + '&api_key=' + common.API_KEY;
-
-  // add format = json
-
-  if ( userAuthToken ) {
-    url += '&token=' + userAuthToken;
+  if ( isSigned ) {
+    params.api_sig = exports.getApiSignature( params );
   }
 
-  if ( sessionKey ) {
-    url += '&sk=' + sessionKey;
-  }
+  // TODO: session key here or in the request?
 
-  if ( params ) {
-    for ( var key in params ) {
-      url += '&' + key + '=' + encodeURIComponent( params[ key ] );
-    }
-  }
+  params.format = 'json';
 
-  return url;
+  return params;
 };
-
-
-exports.getCall = function(params) {
-  var url = common.BASE_URL + 'api_key=' + common.API_KEY;
-
-  if ( params ) {
-    for (var key in params ) {
-      url += '&' + key + '=' + encodeURIComponent( params[ key ] );
-    }
-  }
-
-  return url;
-};
-
-
-/**
- * Returns an object representing the error from last fm.
- * @param {Object} xmljs XML which has been parsed into a js object.
- * @param {stromg} [method] Optional method which was used in the API call.
- * @return {Object} Response object.
- */
-exports.getError = function(xmljs, method) {
-  var msg = xmljs.lfm.error._.trim();
-
-  if ( method ) {
-    msg += '. Method was: ' + method;
-  }
-
-  return {
-    code: xmljs.lfm.error.$.code,
-    msg: msg
-  };
-};
-
-
-// exports.removeScrobble = function(artist, track, timestamp, sessionKey) {
-
-// };
 

@@ -1,16 +1,22 @@
 var express = require('express');
 var app = express();
-var request = require('request');
+var server = require('http').createServer(app);
+var io = require('socket.io').listen(server);
+// var request = require('request');
 var _ = require('underscore');
-var xml2js = require('xml2js');
 var common = require('./common');
 var lastfm = require('./lastfm');
+// var io = require('./sockets').io;
 var Engine = require('tingodb')();
 var db = new Engine.Db('./db', {});
+var fs = require('fs');
 
 var port = 3000;
 app.listen(port);
+server.listen(8080);
 console.log('listening on port ' + port);
+
+
 
 
 /**
@@ -44,13 +50,16 @@ function getDuplicates(tracks) {
 
 function augmentTrackData(tracks, user) {
   _.forEach(tracks, function(track) {
+    track.artist.name = track.artist['#text'];
+    track.date.text = track.date['#text'];
+
     var lastfmTrackListing = 'http://last.fm/user/' + user + '/library/music/' +
-        encodeURIComponent(track.artist['#text']) + '/_/' + encodeURIComponent(track.name);
+        encodeURIComponent(track.artist.name) + '/_/' + encodeURIComponent(track.name);
 
     // Make it pretty like last.fm's urls by replacing %20 with +.
     track.listing = lastfmTrackListing.replace(/%20/g, '+');
 
-    var removeUri = '/remove/' + track.artist['#text'] + '/' + track.name + '/' + track.date.uts;
+    var removeUri = '/remove/' + track.artist.name + '/' + track.name + '/' + track.date.uts;
     track.removeUrl = encodeURI(removeUri);
   });
 }
@@ -77,59 +86,6 @@ app.locals({
 });
 
 
-/*
-<?xml version="1.0" encoding="utf-8"?>
-<lfm status="ok">
-  <session>
-    <name>Shadowolf19</name>
-    <key>67e452bf806562a0a2849d3970624578</key>
-    <subscriber>0</subscriber>
-  </session>
-</lfm>
-*/
-
-/*
-explicitArray = true (default)
-{
-  lfm:  {
-    '$': {
-      status: 'ok'
-    },
-    session: [
-      {
-        name: [
-          'Shadowolf19'
-        ],
-        key: [
-          '67e452bf806562a0a2849d3970624578'
-        ],
-        subscriber: [
-          '0'
-        ]
-      }
-    ]
-  }
-};
-
-explicitArray = false
-{
-  lfm:  {
-    '$': {
-      status: 'ok'
-    },
-    session:  {
-      name: 'Shadowolf19',
-      key: '67e452bf806562a0a2849d3970624578',
-      subscriber: '0'
-    }
-  }
-}
-*/
-var parser = new xml2js.Parser({
-  explicitArray: false
-});
-
-
 db.createCollection('users', function(err/*, collection*/) {
   if (err) {
     console.log('error creating users collection');
@@ -137,6 +93,20 @@ db.createCollection('users', function(err/*, collection*/) {
     console.log('users collection created');
   }
 });
+
+
+function onSocketsConnected(socket) {
+  socket.emit('news', { hello: 'world' });
+  socket.on('sup', function (data) {
+    console.log(data);
+  });
+
+  socket.on('removeScrobble', function() {
+
+  });
+}
+
+io.sockets.on('connection', onSocketsConnected);
 
 
 function restrict(req, res, next) {
@@ -165,54 +135,45 @@ function restrict(req, res, next) {
 
   // The token is available after the user authorizes the app,
   // but the session isn't available yet.
-  } else if ( req.session.LFM_TOKEN ) {
-
-    var method = 'auth.getSession';
-    var url = lastfm.getSignedCall({
-      method: method
-    }, null, req.session.LFM_TOKEN);
-
-    console.log('requesting: ' + url);
+  } else if ( req.session.token ) {
 
     // Make the request to Last.fm for the session.
-    request(url, function(err, response, body) {
-      console.log('got session response:');
-      console.log(body);
+    lastfm.request({
+      method: 'auth.getsession',
+      token: req.session.token
+    }, function(err, result) {
 
-      // Parse XML response from Last.fm. auth.getSession responses are only XML :(
-      parser.parseString(body, function(err, result) {
+      // Make sure last.fm didn't return an error
+      if ( err ) {
+        res.render('error', result);
 
-        // Make sure last.fm didn't return an error
-        if ( result.lfm.$.status === 'ok' ) {
-          var collection = db.collection('users');
-          var doc = {
-            username: result.lfm.session.name,
-            sessionKey: result.lfm.session.key
-          };
+      } else {
+        var collection = db.collection('users');
+        var doc = {
+          username: result.session.name,
+          sessionKey: result.session.key
+        };
 
-          // Save username in a cookie so the app can check if the user already has a
-          // session key stored. That's probably not safe...
-          var thirtyDays = 30 * 24 * 60 * 60 * 1000;
-          res.cookie('username', doc.username, { maxAge: thirtyDays, httpOnly: false });
+        // Save username in a cookie so the app can check if the user already has a
+        // session key stored. That's probably not safe...
+        // var thirtyDays = 30 * 24 * 60 * 60 * 1000;
+        // res.cookie('username', doc.username, { maxAge: thirtyDays, httpOnly: false });
 
-          // Ugh, I have no idea what i'm doing...
-          req.session.username = doc.username;
-          req.session.sk = doc.sessionKey;
-          req.session.LFM_TOKEN = null;
+        // Ugh, I have no idea what i'm doing...
+        req.session.username = doc.username;
+        req.session.sk = doc.sessionKey;
+        // req.session.token = null;
 
-          // Insert new user.
-          collection.insert(doc, {w:1}, function(err/*, result*/) {
-            if (err) {
-              console.log('error inserting recored for:', doc);
-              console.log(err);
-            }
-          });
+        // Insert new user.
+        collection.insert(doc, {w:1}, function(err/*, result*/) {
+          if (err) {
+            console.log('error inserting recored for:', doc);
+            console.log(err);
+          }
+        });
 
-          next();
-        } else {
-          res.render('error', lastfm.getError(result, method));
-        }
-      });
+        next();
+      }
     });
 
   // User needs to authenticate the app.
@@ -239,41 +200,58 @@ app.get('/needs-authentication', function(req, res) {
 });
 
 app.get('/auth', function(req, res) {
-  var token = req.query.token;
-  req.session.LFM_TOKEN = token;
+  req.session.token = req.query.token;
   res.redirect('/');
 });
 
 
-app.get('/duplicates-for-artist', restrict, function(req, res) {
+app.get('/duplicates-for-artist', /*restrict, */function(req, res) {
 
   var artist = req.query.artist;
-  var username = req.session.username;
-  var url = lastfm.getCall({
-    user: username,
-    method: 'user.getartisttracks',
-    artist: artist,
-    format: 'json',
-    limit: 100,
-    page: 2
-  });
+  // var username = req.session.username;
+  // var params = {
+  //   user: username,
+  //   method: 'user.getartisttracks',
+  //   artist: artist,
+  //   limit: 100,
+  //   page: 2
+  // };
 
-  request(url, function(error, response, body) {
+  // lastfm.request(params, function(err, result) {
 
-    if ( error ) {
-      console.log('oops', error);
-    }
+  //   if ( err ) {
+  //     res.render('error', result);
+  //     return;
+  //   }
 
-    var json = JSON.parse(body);
-    var tracks = json.artisttracks.track;
+  //   var tracks = result.artisttracks.track;
+
+  //   var duplicates = getDuplicates(tracks);
+  //   augmentTrackData(duplicates, username);
+
+  //   console.log('duplicates: ' + duplicates.length);
+
+  //   res.render('duplicates', {
+  //     user: username,
+  //     artist: artist,
+  //     duplicates: duplicates
+  //   });
+  // });
+
+  fs.readFile('./macklemore.json', function (err, data) {
+    if (err) throw err;
+    console.log(data);
+
+    var result = JSON.parse(data);
+    var tracks = result.artisttracks.track;
 
     var duplicates = getDuplicates(tracks);
-    augmentTrackData(duplicates, username);
+    augmentTrackData(duplicates, 'Shadowolf19');
 
     console.log('duplicates: ' + duplicates.length);
 
     res.render('duplicates', {
-      user: username,
+      user: 'Shadowolf19',
       artist: artist,
       duplicates: duplicates
     });
@@ -283,34 +261,39 @@ app.get('/duplicates-for-artist', restrict, function(req, res) {
 
 app.get('/remove/:artist/:track/:timestamp', restrict, function(req, res) {
   // Parameters are decoded already.
-  var artist = req.params.artist;
-  var track = req.params.track;
-  var timestamp = req.params.timestamp;
+  var params = {
+    artist: req.params.artist,
+    track: req.params.track,
+    timestamp: req.params.timestamp,
+    sk: req.session.sk
+  };
 
-  var url = lastfm.getSignedCall(null, req.session.sk, {
-    artist: artist,
-    track: track,
-    timestamp: timestamp
-  });
-
-  console.log(url);
-
-  // request.post();
+  // lastfm.request(params, function(err, result) {
+  //   if ( err ) {
+  //     res.render('error', result);
+  //   } else {
+  //     res.render('index', {});
+  //   }
+  // });
 
   res.redirect('back');
 });
 
 
 app.get('/recommended-artists', restrict, function(req, res) {
-  var url = lastfm.getSignedCall({
-    method: 'user.getRecommendedArtists'
-  }, req.session.sk);
 
-  request.post(url, function(err, response, body) {
-    console.log('got recommended artists response:');
-    console.log(body);
+  var params = {
+    method: 'user.getrecommendedartists',
+    sk: req.session.sk
+  };
 
-    res.render('index', {});
+  lastfm.request(params, function(err, result) {
+
+    if ( err ) {
+      res.render('error', result);
+    } else {
+      res.render('index', {});
+    }
   });
 });
 
