@@ -270,24 +270,28 @@ app.get('/duplicates-for-artist', /*restrict, */function(req, res) {
 });
 
 
-app.post('/remove/:artist/:track/:timestamp', restrict, function(req, res) {
+// Ajax hook for deleting a scrobble.
+app.post('/remove-track', restrict, function(req, res) {
   // Parameters are decoded already.
   var params = {
-    artist: req.params.artist,
-    track: req.params.track,
-    timestamp: req.params.timestamp,
+    method: 'library.removescrobble',
+    artist: req.body.artist,
+    track: req.body.track,
+    timestamp: req.body.timestamp,
     sk: req.session.sk
   };
 
-  // lastfm.request(params, function(err, result) {
-  //   if ( err ) {
-  //     res.render('error', result);
-  //   } else {
-  //     res.render('index', {});
-  //   }
-  // });
+  lastfm.request(params, function(err, result) {
+    var status = 200;
+    var resp = { ok: true };
+    if ( err ) {
+      status = 501;
+      resp.ok = false;
+    }
 
-  res.redirect('back');
+    // Send json response.
+    res.json(status, resp);
+  });
 });
 
 
