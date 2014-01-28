@@ -1,11 +1,11 @@
 
 
-define(['jquery', 'socket.io'], function($, io) {
-  var socket = io.connect('http://localhost:8080');
-  socket.on('news', function (data) {
-    console.log(data);
-    socket.emit('sup', { my: 'data' });
-  });
+define(['jquery'], function($, io) {
+  // var socket = io.connect('http://localhost:8080');
+  // socket.on('news', function (data) {
+  //   console.log(data);
+  //   socket.emit('sup', { my: 'data' });
+  // });
 
   var TrackRemover = function( element ) {
     this.$element = $(element);
@@ -20,7 +20,8 @@ define(['jquery', 'socket.io'], function($, io) {
     var buttonEl = evt.target;
     var data = buttonEl.dataset;
 
-    socket.emit('removeScrobble', data);
+    console.log(data);
+    // socket.emit('removeScrobble', data);
   };
 
   return TrackRemover;

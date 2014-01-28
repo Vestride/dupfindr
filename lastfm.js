@@ -50,17 +50,20 @@ function requiresSignature( method ) {
 
 
 exports.request = function(params, fn) {
-  var verb = 'get';
+  var httpVerb = 'get';
   var firstParam;
-  var requestParams = exports.getCall( params, requiresSignature( params.method ) );
+  var requestParams = exports.getCall( params );
 
+  // Posting has to be done as a js object.
   if ( isWriteMethod( params.method ) ) {
-    verb = 'post';
+    httpVerb = 'post';
 
     firstParam = {
       uri: common.BASE_URL,
       form: requestParams
     };
+
+  // Create query string.
   } else {
     firstParam = common.BASE_URL + '?';
     for ( var key in requestParams ) {
@@ -68,12 +71,13 @@ exports.request = function(params, fn) {
     }
   }
 
-  console.log('========= ' + verb + ': ', firstParam);
+  console.log(httpVerb.toUpperCase() + ': ', firstParam);
 
-  request[verb](firstParam, function(err, response, body) {
-    console.log('last.fm response:', body.length > 200 ? body.substring(0, 200) + '| truncated' : body);
-    // console.log(body);
+  request[httpVerb](firstParam, function(err, response, body) {
+    var resp = body.length > 200 ? body.substring(0, 200) + '| truncated' : body;
+    console.log('last.fm response:', resp);
 
+    // Parse JSON from Last.fm
     var result = JSON.parse(body);
     var error = err || result.error ? result : null;
 
@@ -95,29 +99,27 @@ exports.getApiSignature = function(params) {
   }
 
   // Alphabetically sort keys.
-  var keys = [];
-  for ( var key in params ) {
-    keys.push(key);
-  }
-  keys.sort();
+  var keys = Object.keys(params).sort();
 
   // Create concatenated string of <name><value>.
   var paramsList = _.reduce(keys, function(memo, key) {
     return memo + key + params[ key ];
   }, '');
 
+  // Append secret to the request rul.
   var signature = paramsList + common.SECRET;
 
   console.log('params list:', paramsList);
 
+  // Hash it and return.
   return md5(signature);
 };
 
 
-exports.getCall = function(params, isSigned) {
+exports.getCall = function( params ) {
   params.api_key = common.API_KEY;
 
-  if ( isSigned ) {
+  if ( requiresSignature( params.method ) ) {
     params.api_sig = exports.getApiSignature( params );
   }
 

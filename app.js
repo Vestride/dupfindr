@@ -1,7 +1,7 @@
 var express = require('express');
 var app = express();
 var server = require('http').createServer(app);
-var io = require('socket.io').listen(server);
+// var io = require('socket.io').listen(server);
 // var request = require('request');
 var _ = require('underscore');
 var common = require('./common');
@@ -95,29 +95,40 @@ db.createCollection('users', function(err/*, collection*/) {
 });
 
 
-function onSocketsConnected(socket) {
-  socket.emit('news', { hello: 'world' });
-  socket.on('sup', function (data) {
-    console.log(data);
-  });
+// function onSocketsConnected(socket) {
+//   socket.emit('news', { hello: 'world' });
+//   socket.on('sup', function (data) {
+//     console.log(data);
+//   });
 
-  socket.on('removeScrobble', function() {
+//   socket.on('removeScrobble', function() {
 
-  });
+//   });
+// }
+
+// io.sockets.on('connection', onSocketsConnected);
+
+
+// No clue if this is bad to do or not.
+function updateSession(session, user) {
+  session.username = user.username;
+  session.sk = user.sessionKey;
 }
-
-io.sockets.on('connection', onSocketsConnected);
 
 
 function restrict(req, res, next) {
   console.log('---restrict---');
+  console.log('Cookies:');
+  common.log(req.cookies);
 
   // Session key available. The user has authorized our app.
   if ( req.session.sk ) {
+    console.log('session key available on session object');
     next();
 
   // New session, but they've authenticated before.
   } else if ( req.cookies.username ) {
+    console.log('new session, but they have authenticated before');
     var collection = db.collection('users');
 
     collection.findOne({ username: req.cookies.username }, function(err, user) {
@@ -126,8 +137,8 @@ function restrict(req, res, next) {
         console.log(err);
       }
 
-      req.session.username = user.username;
-      req.session.sk = user.sessionKey;
+      console.log('Got ' + user.username + ' from database. Setting session variabes');
+      updateSession(req.session, user);
 
       next();
     });
@@ -136,6 +147,7 @@ function restrict(req, res, next) {
   // The token is available after the user authorizes the app,
   // but the session isn't available yet.
   } else if ( req.session.token ) {
+    console.log('session has token, get the session key from lastfm');
 
     // Make the request to Last.fm for the session.
     lastfm.request({
@@ -156,18 +168,16 @@ function restrict(req, res, next) {
 
         // Save username in a cookie so the app can check if the user already has a
         // session key stored. That's probably not safe...
-        // var thirtyDays = 30 * 24 * 60 * 60 * 1000;
-        // res.cookie('username', doc.username, { maxAge: thirtyDays, httpOnly: false });
+        var thirtyDays = 30 * 24 * 60 * 60 * 1000;
+        res.cookie('username', doc.username, { maxAge: thirtyDays, httpOnly: false });
 
         // Ugh, I have no idea what i'm doing...
-        req.session.username = doc.username;
-        req.session.sk = doc.sessionKey;
-        // req.session.token = null;
+        updateSession(req.session, doc);
 
-        // Insert new user.
-        collection.insert(doc, {w:1}, function(err/*, result*/) {
+        // Insert new user if one doesn't already exist.
+        collection.update({username: doc.username}, doc, {upsert: true, w:1}, function(err/*, result*/) {
           if (err) {
-            console.log('error inserting recored for:', doc);
+            console.log('error updating recored for:', doc);
             console.log(err);
           }
         });
@@ -178,6 +188,7 @@ function restrict(req, res, next) {
 
   // User needs to authenticate the app.
   } else {
+    console.log('User needs to authenticate the app');
     // req.session.error = 'Access denied!';
     res.redirect('/needs-authentication');
   }
@@ -259,7 +270,7 @@ app.get('/duplicates-for-artist', /*restrict, */function(req, res) {
 });
 
 
-app.get('/remove/:artist/:track/:timestamp', restrict, function(req, res) {
+app.post('/remove/:artist/:track/:timestamp', restrict, function(req, res) {
   // Parameters are decoded already.
   var params = {
     artist: req.params.artist,
