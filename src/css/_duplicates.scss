@@ -1,0 +1,87 @@
+
+.warning {
+  display: inline-block;
+  padding: 5px;
+  background-color: $warning;
+  color: white;
+
+  p & {
+    margin-left: 5px;
+  }
+}
+
+.title-wrap {
+  margin: 1em 0 0.75em;
+}
+
+.badge {
+  display: inline-block;
+  min-width: 24px;
+  padding: 4px;
+  background-color: $info;
+  color: white;
+  border-radius: 2px;
+  text-align: center;
+  font-size: 14px;
+
+  & + span {
+    padding-left: 5px;
+  }
+}
+
+.duplicate-list {
+  width: 100%;
+  list-style: none;
+  padding-left: 0;
+}
+
+.duplicate-list li {
+  overflow: hidden;
+  display: flex;
+
+  .li-part:first-child {
+    flex: 1;
+  }
+}
+
+.duplicate-list li:nth-child(odd) {
+  background-color: #EEE;
+}
+
+.duplicate-list li:hover {
+  background-color: rgba(190, 190, 190, 0.6);
+}
+
+.duplicate-list .li-part {
+  padding: 8px 10px;
+}
+
+.duplicate-list .btn-error .fa {
+  padding-right: 4px;
+}
+
+
+.duplicate-list .remove-item {
+  animation: shrinkHeight .3s ease forwards;
+}
+
+// @keyframes growHeight {
+//   to {
+//     // max-height kinda janky way to do this
+//     max-height: 50px;
+//     opacity: 1;
+//     transform: scale(1);
+//   }
+// }
+@keyframes shrinkHeight {
+  from {
+    max-height: 50px;
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    max-height: 0;
+    opacity: 0;
+    transform: scale(0);
+  }
+}

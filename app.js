@@ -195,7 +195,27 @@ function restrict(req, res, next) {
 }
 
 app.get('/', restrict, function(req, res) {
-  res.render('index', {});
+  var params = {
+    user: req.session.username,
+    method: 'user.gettopartists',
+    limit: 50,
+  };
+
+  // lastfm.request(params, function(err, result) {
+  fs.readFile('./topartists.json', function (err, data) {
+    var result = JSON.parse(data);
+    if ( err ) {
+      res.render('error', result);
+      return;
+    }
+
+    var artists = result.topartists.artist;
+    // TODO remove when i have updated json
+    artists.length = 20;
+    res.render('index', {
+      artists: artists
+    });
+  });
 });
 
 
@@ -216,57 +236,58 @@ app.get('/auth', function(req, res) {
 });
 
 
-app.get('/duplicates-for-artist', /*restrict, */function(req, res) {
+app.get('/duplicates-for-artist', restrict, function(req, res) {
 
   var artist = req.query.artist;
-  // var username = req.session.username;
-  // var params = {
-  //   user: username,
-  //   method: 'user.getartisttracks',
-  //   artist: artist,
-  //   limit: 100,
-  //   page: 2
-  // };
+  var username = req.session.username;
+  var params = {
+    user: username,
+    method: 'user.getartisttracks',
+    artist: artist,
+    limit: 250,
+    // page: 2
+  };
 
-  // lastfm.request(params, function(err, result) {
+  lastfm.request(params, function(err, result) {
 
-  //   if ( err ) {
-  //     res.render('error', result);
-  //     return;
-  //   }
+    if ( err ) {
+      res.render('error', result);
+      return;
+    }
 
-  //   var tracks = result.artisttracks.track;
-
-  //   var duplicates = getDuplicates(tracks);
-  //   augmentTrackData(duplicates, username);
-
-  //   console.log('duplicates: ' + duplicates.length);
-
-  //   res.render('duplicates', {
-  //     user: username,
-  //     artist: artist,
-  //     duplicates: duplicates
-  //   });
-  // });
-
-  fs.readFile('./macklemore.json', function (err, data) {
-    if (err) throw err;
-    console.log(data);
-
-    var result = JSON.parse(data);
     var tracks = result.artisttracks.track;
+    console.log('Total tracks by ' + artist + ' = ' + tracks.length);
 
     var duplicates = getDuplicates(tracks);
-    augmentTrackData(duplicates, 'Shadowolf19');
+    augmentTrackData(duplicates, username);
 
     console.log('duplicates: ' + duplicates.length);
 
     res.render('duplicates', {
-      user: 'Shadowolf19',
+      user: username,
       artist: artist,
       duplicates: duplicates
     });
   });
+
+  // fs.readFile('./macklemore.json', function (err, data) {
+  //   if (err) throw err;
+  //   console.log(data);
+
+  //   var result = JSON.parse(data);
+  //   var tracks = result.artisttracks.track;
+
+  //   var duplicates = getDuplicates(tracks);
+  //   augmentTrackData(duplicates, 'Shadowolf19');
+
+  //   console.log('duplicates: ' + duplicates.length);
+
+  //   res.render('duplicates', {
+  //     user: 'Shadowolf19',
+  //     artist: artist,
+  //     duplicates: duplicates
+  //   });
+  // });
 });
 
 

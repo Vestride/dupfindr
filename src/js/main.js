@@ -20,10 +20,10 @@ define(function(require) {
   //   socket.emit('sup', { my: 'data' });
   // });
 
-  var $trackList = $('.duplicate-list');
+  var $trackRemover = $('.js-track-remover');
 
-  if ( $trackList.length ) {
-    var tr = new TrackRemover( $trackList[0] );
+  if ( $trackRemover.length ) {
+    var tr = new TrackRemover( $trackRemover[0]);
   }
 });
 

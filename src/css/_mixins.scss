@@ -1,0 +1,114 @@
+
+
+$turqoise: #1ABC9C;
+$greenSea: #16A085;
+
+$emerald: #2ECC71;
+$nephritis: #27AE60;
+
+$river: #3498DB;
+$belizeHole: #2980B9;
+
+$amethyst: #9B59B6;
+$wisteria: #8E44AD;
+
+$wetAsphalt: #34495E;
+$midnightBlue: #2C3E50;
+
+$sunflower: #F1C40F;
+$orange: #F39C12;
+
+$carrot: #E67E22;
+$pumpkin: #D35400;
+
+$alizarin: #E74C3C;
+$pomegranate: #C0392B;
+
+$clouds: #ECF0F1;
+$silver: #BDC3C7;
+
+$concrete: #95A5A6;
+$asbestos: #7F8C8D;
+
+//
+
+$black: #000;
+$gray10: $midnightBlue;
+$gray20: $wetAsphalt;
+$gray30: #5D6D77;
+$gray40: $concrete;
+$gray50: $asbestos;
+$gray60: $silver;
+$gray80: $clouds;
+$white: #FFF;
+
+$warning: rgb(223, 117, 20);
+$error: rgb(202, 60, 60);
+$info: rgb(66, 184, 221);
+$success: rgb(28, 184, 65);
+
+// Fill the parent using absolute positioning
+@mixin fill-parent() {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+
+// A ghost element used to vertically center something
+// http://css-tricks.com/centering-in-the-unknown/
+@mixin ghost( $child: 'ghost-center' ) {
+  font-size: 0;
+  height: 100%;
+
+  &:before {
+    content: '';
+    display: inline-block;
+    vertical-align: middle;
+    width: 0;
+    height: 100%;
+  }
+
+  .#{$child} {
+    display: inline-block;
+
+    // For Firefox...
+    max-width: 100%;
+    max-height: 100%;
+
+    // Yeya!
+    vertical-align: middle;
+
+    // Because the parent has a font-size of 0.
+    font-size: 16px;
+    font-size: 1rem;
+  }
+}
+
+
+// Clearfix
+// --------
+// For clearing floats like a boss h5bp.com/q
+@mixin clearfix {
+  &::before,
+  &::after {
+    display: table;
+    content: "";
+  }
+  &::after {
+    clear: both;
+  }
+}
+
+// Text overflow
+// -------------------------
+// Requires inline-block or block for proper styling
+@mixin text-overflow($nowrap: true) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  @if ( $nowrap ) {
+    white-space: nowrap;
+  }
+}

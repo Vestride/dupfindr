@@ -3,20 +3,28 @@ extends layout
 
 block content
 
-  .container
-    .row
-      .col-sm-12
-        h1 Last.fm Duplicate Findr
+  .pure-g
+    .pure-u-1
+      h1.t1 Last.fm Duplicate Findr
+      p Click an artist or search for one below.
 
-  .container
-    .row
-      .col-sm-12
-        h2 Cool, now we can delete scrobbles!
+  if locals.artists
+    .pure-g
+      each artist in locals.artists
+        .pure-u-1-4
+          a.artist-card(href="duplicates-for-artist?artist=" + encodeURIComponent(artist.name))
+            .artist-card__img.keep-ratio.HD
+              .keep-ratio-inner
+                img(src=artist.image[3]['#text'], alt=artist.name)
+                p.artist-card__playcount.marginless= artist.playcount
+            .artist-card__inner
+              p.artist-card__name.marginless.text-overflow= artist.name
 
-    form.row(method="get", action="/duplicates-for-artist")
-      .col-sm-12
-        input.topcoat-text-input--large(type="text", name="artist", placeholder="Artist Name",
-            value="Macklemore & Ryan Lewis")
-        br
-        br
-        input.topcoat-button--large--cta(type="submit", value="Find Duplicates")
+
+  form.pure-g.pure-form(method="get", action="/duplicates-for-artist")
+    .pure-u-1
+      p Search for an artist
+      input(type="text", name="artist", placeholder="Artist Name", required)
+      br
+      br
+      input.pure-button.pure-button-primary(type="submit", value="Find Duplicates")

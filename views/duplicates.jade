@@ -1,35 +1,63 @@
 extends layout
 
 mixin trackRow(track)
-  td= track.name
-  td= track.date.text
-  td
-    a(href=track.listing, target="_blank") View on Last.fm
-  td
-    button(class="topcoat-button--large--cta danger js-remove",
-        data-track=track.name,
-        data-artist=track.artist.name,
-        data-timestamp=track.date.uts,
-        title="Remove this scrobble")
-      | Remove
+  li
+    div.li-part.flex-center= track.name
+    div.li-part.flex-center= track.date.text
+    div.li-part.flex-center
+      a(href=track.listing, target="_blank") View track
+    div.li-part.flex-center
+      button(class="pure-button btn-warning js-remove",
+          data-track=track.name,
+          data-artist=track.artist.name,
+          data-timestamp=track.date.uts,
+          title="Remove this scrobble")
+        i.fa.fa-trash-o
+        |  Remove
+
+
+mixin listDuplicates()
+  .pure-g
+    .pure-u-1
+      h1.t2
+        | !{ 'Duplicate list for ' }
+        em= locals.artist
+      p
+        | Click the <strong>remove</strong> button to remove the track from your scrobbling history.
+        span.warning This is permanent!
+
+  .pure-g.js-track-remover
+    .pure-u-1
+      .title-wrap.clearfix
+        .pull-left
+          h2.t3.flex-center.marginless
+            span.badge.js-duplicate-count= duplicates.length
+            span !{ ' Duplicates.' }
+        .pull-right
+          button.pure-button.btn-error.js-remove-all.fade.in
+            i.fa.fa-exclamation-circle
+            |  Remove all
+      ul.duplicate-list
+        each duplicate in locals.duplicates
+          +trackRow(duplicate)
+    .pure-u-1.js-none-left.hidden
+      p.t4 There are no duplicates left
+      p
+        a.pure-button(href="/") Home
+
+
+
+
+mixin noDuplicates()
+  .pure-g
+    .pure-u-1
+      h1
+        | !{ 'No duplicates found for ' }
+        em= locals.artist
 
 
 block content
-
-  .container
-    .row
-      .col-sm-12
-        h1
-          | !{ 'Duplicate list for ' }
-          em= locals.artist
-
-  .container
-    .row
-      .col-sm-12
-        h2.t2
-          span.topcoat-notification= duplicates.length
-          | !{ ' Duplicates.' }
-        table.table.duplicate-list
-          each duplicate in locals.duplicates
-            tr
-              +trackRow(duplicate)
+  if ( locals.duplicates.length > 0 )
+    +listDuplicates()
+  else
+    +noDuplicates()

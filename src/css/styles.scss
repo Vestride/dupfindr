@@ -1,62 +1,113 @@
-@import "normalize";
-@import "bootstrap-grid";
-@import "topcoat";
+@import "mixins";
 
-body {
-  padding-bottom: 100px;
+*,
+::before,
+::after {
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
 }
 
-h1 {
-  font-weight: 300;
-}
-
-h2 {
-  font-weight: 300;
-}
-
-
-.topcoat-button--large--cta {
-  cursor: pointer; // How is this not the default??
+.pure-g {
+  width: 93%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 
+@import "type";
 
-.table {
+
+.pure-form input[type=text],
+.pure-form input[type=password],
+.pure-form input[type=email],
+.pure-form input[type=url],
+.pure-form input[type=date],
+.pure-form input[type=month],
+.pure-form input[type=time],
+.pure-form input[type=datetime],
+.pure-form input[type=datetime-local],
+.pure-form input[type=week],
+.pure-form input[type=number],
+.pure-form input[type=search],
+.pure-form input[type=tel],
+.pure-form input[type=color],
+.pure-form select,
+.pure-form textarea {
+  -webkit-appearance: none;
+  border-radius: 2px;
+}
+
+// a.pure-button {
+
+//   &,
+//   &:visited {
+//     color: #444;
+//     color: rgba(0,0,0,.8);
+//   }
+
+//   &:hover {
+//     text-decoration: none;
+//   }
+
+//   &:active {
+//     color: #444;
+//     color: rgba(0,0,0,.8);
+//   }
+// }
+
+.btn-success,
+.btn-error,
+.btn-warning,
+.btn-secondary {
+  color: white;
+  border-radius: 4px;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.btn-success {
+  background-color: $success;
+}
+
+.btn-error {
+  background-color: $error;
+}
+
+.btn-warning {
+  background-color: $warning;
+}
+
+.btn-secondary {
+  background-color: $info;
+}
+
+.artist-card {
+  display: block;
+  background: $gray80;
+  text-decoration: none;
+  color: $wetAsphalt;
+}
+
+.artist-card__img img {
   width: 100%;
 }
 
-.table tr {
-  transition: .15s;
+.artist-card__playcount {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 4px;
+  color: white;
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
-.table tr:nth-child(odd) {
-  background-color: #EEE;
-}
-
-.table tr:hover {
-  background-color: rgba(190, 190, 190, 0.6);
-}
-
-.table td {
-  padding: 6px 10px;
+.artist-card__inner {
+  padding: 15px 10px;
 }
 
 
-.danger {
-  border-color: #AB4C3F;
-  background-color: #DF392A;
-}
+@import "utilities";
 
-.danger:focus,
-.danger:hover, {
-  background-color: hsl(15, 74%, 52%);
-}
+@import "duplicates";
 
-.danger:active {
-  background-color: hsl(5, 74%, 40%);
-}
 
-.t2 .topcoat-notification {
-  font-size: 1rem;
-  vertical-align: middle;
-}
