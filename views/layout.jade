@@ -1,7 +1,10 @@
+include helpers
 !!! 5
 html
   include head
   body
+
     block content
 
-    script(src="/js/require.js", data-main="/js/main")
+    script(src="/js/require.js")
+    block require

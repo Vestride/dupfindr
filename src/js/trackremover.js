@@ -1,23 +1,9 @@
 
 
-define(['jquery'], function($) {
-
-  var transitionend = (function() {
-    var el = document.createElement('div');
-    var transitions = {
-      'transition': 'transitionend',
-      'WebkitTransition': 'webkitTransitionEnd',
-      'OTransition': 'oTransitionEnd',
-      'MozTransition': 'transitionend'
-    };
-
-    for ( var t in transitions ) {
-      if ( el.style[t] !== undefined ) {
-        el = null;
-        return transitions[t];
-      }
-    }
-  })();
+define(function(require) {
+  var $ = require('jquery');
+  var Utilities = require('utilities');
+  var Settings = require('settings');
 
   var TrackRemover = function( element ) {
     this.$el = $(element);
@@ -114,7 +100,7 @@ define(['jquery'], function($) {
 
     $(removeAllEl)
         .removeClass('in')
-        .one(transitionend, function() {
+        .one(Settings.transitionend, function() {
           $(removeAllEl).remove();
         });
   };

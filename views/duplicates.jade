@@ -17,47 +17,57 @@ mixin trackRow(track)
 
 
 mixin listDuplicates()
-  .pure-g
-    .pure-u-1
-      h1.t2
-        | !{ 'Duplicate list for ' }
-        em= locals.artist
-      p
-        | Click the <strong>remove</strong> button to remove the track from your scrobbling history.
-        span.warning This is permanent!
+  .list-duplicates.hidden
+    .pure-g
+      .pure-u-1
+        h1.t2
+          | !{ 'Duplicate list for ' }
+          em= locals.artist
+        p
+          | Click the <strong>remove</strong> button to remove the track from your scrobbling history.
+          span.warning This is permanent!
 
-  .pure-g.js-track-remover
-    .pure-u-1
-      .title-wrap.clearfix
-        .pull-left
-          h2.t3.flex-center.marginless
-            span.badge.js-duplicate-count= duplicates.length
-            span !{ ' Duplicates.' }
-        .pull-right
-          button.pure-button.btn-error.js-remove-all.fade.in
-            i.fa.fa-exclamation-circle
-            |  Remove all
-      ul.duplicate-list
-        each duplicate in locals.duplicates
-          +trackRow(duplicate)
-    .pure-u-1.js-none-left.hidden
-      p.t4 There are no duplicates left
-      p
-        a.pure-button(href="/") Home
+    .pure-g.js-track-remover
+      //- .pure-u-1
+      //-   .title-wrap.clearfix
+      //-     .pull-left
+      //-       h2.t3.flex-center.marginless
+      //-         span.badge.js-duplicate-count= duplicates.length
+      //-         span !{ ' Duplicates.' }
+      //-     .pull-right
+      //-       button.pure-button.btn-error.js-remove-all.fade.in
+      //-         i.fa.fa-exclamation-circle
+      //-         |  Remove all
+      //-   ul.duplicate-list
+      //-     each duplicate in locals.duplicates
+      //-       +trackRow(duplicate)
+      //- .pure-u-1.js-none-left.hidden
+      //-   p.t4 There are no duplicates left
+      //-   p
+      //-     a.pure-button(href="/") Home
 
 
 
 
 mixin noDuplicates()
-  .pure-g
-    .pure-u-1
-      h1
-        | !{ 'No duplicates found for ' }
-        em= locals.artist
+  .hidden.no-duplicates
+    .pure-g
+      .pure-u-1
+        h1
+          | !{ 'No duplicates found for ' }
+          em= locals.artist
 
 
 block content
-  if ( locals.duplicates.length > 0 )
-    +listDuplicates()
-  else
-    +noDuplicates()
+  +listDuplicates()
+  +noDuplicates()
+  .list-loading-msg
+    .pure-g
+      .pure-u-1
+        h2.t1 !{ 'Looking for duplicates for ' + locals.artist + '.' }
+  //- if ( locals.duplicates.length > 0 )
+  //- else
+
+
+block require
+  +requireScript('pages/artist-duplicates')

@@ -1,0 +1,23 @@
+mixin sayHi()
+  h1 Hello World
+
+
+
+mixin requireScript(path)
+  script.
+    require(['./js/main'], function(main) {
+      require(['#{path}'])
+    });
+
+
+mixin loaderMessage(message)
+  message = message || 'Loading...'
+  p.loader-msg.marginless= message
+
+
+mixin loaderDots()
+  .loader-dots
+    .dot.dot1
+    .dot.dot2
+    .dot.dot3
+    .dot.dot4

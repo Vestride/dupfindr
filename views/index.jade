@@ -6,20 +6,16 @@ block content
   .pure-g
     .pure-u-1
       h1.t1 Last.fm Duplicate Findr
+    .pure-u-2-3
+      p
+        | Sometimes you can end up with duplicate - or more - scrobbles for a single track on Last.fm.
+        | This app aims to remove those duplicate scrobble which distort your play counts and other stats.
       p Click an artist or search for one below.
 
-  if locals.artists
-    .pure-g
-      each artist in locals.artists
-        .pure-u-1-4
-          a.artist-card(href="duplicates-for-artist?artist=" + encodeURIComponent(artist.name))
-            .artist-card__img.keep-ratio.HD
-              .keep-ratio-inner
-                img(src=artist.image[3]['#text'], alt=artist.name)
-                p.artist-card__playcount.marginless= artist.playcount
-            .artist-card__inner
-              p.artist-card__name.marginless.text-overflow= artist.name
-
+  .pure-g#artist-cards.artist-cards
+    .pure-u-1.ghost-center-wrap.text-center.artist-cards__loader
+      .ghost-center
+        +loaderMessage('Loading top artists...')
 
   form.pure-g.pure-form(method="get", action="/duplicates-for-artist")
     .pure-u-1
@@ -28,3 +24,8 @@ block content
       br
       br
       input.pure-button.pure-button-primary(type="submit", value="Find Duplicates")
+
+  include mustache/artist-card.html
+
+block require
+  +requireScript('pages/home')
