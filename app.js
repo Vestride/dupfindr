@@ -232,10 +232,20 @@ app.get('/topartists', restrict, function(req, res) {
       return;
     }
 
+    // common.log(result.topartists['@attr']);
+    // user
+    // type: 'overall'
+    // page
+    // perPage
+    // totalPages
+    // total
+
     var artists = result.topartists.artist;
     // TODO remove when i have updated json
-    artists.length = 20;
-    res.json(artists);
+    artists.length = 12;
+    res.json({
+      artists: artists
+    });
   });
 });
 
@@ -261,7 +271,12 @@ app.get('/artist-duplicates', restrict, function(req, res) {
   lastfm.request(params, function(err, result) {
 
     if ( err || !result.artisttracks.track ) {
-      res.json(500, { ok: false, err: err, result: result });
+      res.json(400, {
+        ok: false,
+        err: result.error,
+        message: result.message,
+        generic: 'Oops, there was a problem.'
+      });
       return;
     }
 
@@ -285,44 +300,13 @@ app.get('/artist-duplicates', restrict, function(req, res) {
 
 
 app.get('/duplicates-for-artist', restrict, function(req, res) {
-
   var artist = req.query.artist;
   var username = req.session.username;
-  var params = {
-    user: username,
-    method: 'user.getartisttracks',
-    artist: artist,
-    limit: 250,
-    // page: 2
-  };
-
 
   res.render('duplicates', {
     user: username,
     artist: artist
   });
-
-  // lastfm.request(params, function(err, result) {
-
-  //   if ( err ) {
-  //     res.render('error', result);
-  //     return;
-  //   }
-
-  //   var tracks = result.artisttracks.track;
-  //   console.log('Total tracks by ' + artist + ' = ' + tracks.length);
-
-  //   var duplicates = getDuplicates(tracks);
-  //   augmentTrackData(duplicates, username);
-
-  //   console.log('duplicates: ' + duplicates.length);
-
-  //   res.render('duplicates', {
-  //     user: username,
-  //     artist: artist,
-  //     duplicates: duplicates
-  //   });
-  // });
 });
 
 

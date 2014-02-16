@@ -1,6 +1,7 @@
 
 define(function(require) {
   var Settings = require('settings');
+  var Storage = require('storage');
 
   var Utilities = {};
 
@@ -116,7 +117,7 @@ define(function(require) {
 
 
   Utilities.requestArtistDuplicates = function( artist ) {
-    var duplicates = Utilities.getStoredArtistDuplicates(artist);
+    var duplicates = Storage.getArtistDuplicates(artist);
     if ( duplicates !== null ) {
       var deferred = new $.Deferred();
       deferred.resolveWith(null, [{
@@ -137,24 +138,12 @@ define(function(require) {
 
     // Save to session storage.
     xhr.done(function(data) {
-      Utilities.storeArtistDuplicates( data.artist, data.duplicates );
+      Storage.setArtistDuplicates( data.artist, data.duplicates );
     });
 
     return xhr;
   };
 
-
-  Utilities.getStoredArtistDuplicates = function( artist, parse ) {
-    var dups = window.sessionStorage.getItem( artist );
-    if ( dups && parse ) {
-      dups = JSON.parse( dups );
-    }
-    return dups;
-  };
-
-  Utilities.storeArtistDuplicates = function( artist, duplicates ) {
-    window.sessionStorage.setItem(artist, JSON.stringify( duplicates ));
-  };
 
   return Utilities;
 });

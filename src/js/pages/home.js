@@ -2,7 +2,8 @@
 define(function(require) {
   var $ = require('jquery'),
       Mustache = require('libs/mustache'),
-      Utilities = require('utilities');
+      Utilities = require('utilities'),
+      Storage = require('storage');
 
 
   var artistCardTempalate = $('#mustache__artist-card').html().trim();
@@ -23,6 +24,13 @@ define(function(require) {
 
 
   ArtistLoader.prototype.getTopArtists = function() {
+    var top = Storage.getTopArtists(0);
+    if ( top && top.length > 0 ) {
+      this.populateArtists(top);
+      this.preloadDuplicates(top);
+      return;
+    }
+
     var jqXhr = $.ajax({
       url: '/topartists',
       type: 'get',
@@ -31,8 +39,9 @@ define(function(require) {
     });
 
     jqXhr.done(function( data ) {
-      this.populateArtists(data);
-      this.preloadDuplicates(data);
+      this.populateArtists(data.artists);
+      Storage.setTopArtists(data.artists);
+      this.preloadDuplicates(data.artists);
     }.bind(this)).fail(function(data, status, statusText) {
       console.log('getting top artists failed: ' + status + ' - ' + statusText);
     });
@@ -48,7 +57,7 @@ define(function(require) {
 
   ArtistLoader.prototype.preloadDuplicates = function( data ) {
     data.forEach(function(artist, i) {
-      var delay = Utilities.getStoredArtistDuplicates( artist.name ) === null ?
+      var delay = Storage.getArtistDuplicates( artist.name ) === null ?
           150 * i : 0;
       setTimeout(function() {
         this.getArtistDuplicates( artist.name );
@@ -78,9 +87,10 @@ define(function(require) {
     var wait = Utilities.requestArtistDuplicates( artist );
 
     wait.done(function(data) {
-      console.log(data);
       this.displayDuplicatesForArtist( artist, data.duplicates );
     }.bind(this)).fail(function(data, status, statusText) {
+      var data = JSON.parse( jqXHR.responseText );
+      console.log(data);
       console.log('getting ' + artist + ' failed: ' + status + ' - ' + statusText);
     });
   };

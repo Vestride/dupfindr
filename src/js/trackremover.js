@@ -4,6 +4,7 @@ define(function(require) {
   var $ = require('jquery');
   var Utilities = require('utilities');
   var Settings = require('settings');
+  var Storage = require('storage');
 
   var TrackRemover = function( element ) {
     this.$el = $(element);
@@ -25,30 +26,29 @@ define(function(require) {
 
 
   TrackRemover.prototype.handleTrackRemoved = function(evt, trackData) {
+    var removedTimestamp = parseInt(trackData.timestamp, 10);
+    var storedDuplicates = Storage.getArtistDuplicates(trackData.artist, true);
+    var timestamps = storedDuplicates.map(function(obj) {
+      return parseInt( obj.date.uts, 10 );
+    });
+
+    var index = timestamps.indexOf( removedTimestamp );
+
+    if ( index !== -1 ) {
+      storedDuplicates.splice( index, 1 );
+    }
+
+    Storage.setArtistDuplicates( trackData.artist, storedDuplicates );
+
     this.decrementCounter();
 
-    if ( this.duplicateCount > 0 ) {
-      var removedTimestamp = parseInt(trackData.timestamp, 10);
-      var storedDuplicates = Utilities.getStoredArtistDuplicates(trackData.artist, true);
-      var timestamps = storedDuplicates.map(function(obj) {
-        return parseInt( obj.date.uts, 10 );
-      });
+    if ( this.duplicateCount === 0 ) {
+      var $zeroMessage = this.$el.find('.js-none-left'),
+          $siblings = $zeroMessage.siblings();
 
-      var index = timestamps.indexOf( removedTimestamp );
-
-      if ( index !== -1 ) {
-        storedDuplicates.splice( index, 1 );
-      }
-
-      Utilities.storeArtistDuplicates( trackData.artist, storedDuplicates );
-
-      return;
+      $siblings.addClass('hidden');
+      $zeroMessage.removeClass('hidden');
     }
-    var $zeroMessage = this.$el.find('.js-none-left'),
-        $siblings = $zeroMessage.siblings();
-
-    $siblings.addClass('hidden');
-    $zeroMessage.removeClass('hidden');
   };
 
 
