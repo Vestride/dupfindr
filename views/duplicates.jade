@@ -1,20 +1,5 @@
 extends layout
 
-mixin trackRow(track)
-  li
-    div.li-part.flex-center= track.name
-    div.li-part.flex-center= track.date.text
-    div.li-part.flex-center
-      a(href=track.listing, target="_blank") View track
-    div.li-part.flex-center
-      button(class="pure-button btn-warning js-remove",
-          data-track=track.name,
-          data-artist=track.artist.name,
-          data-timestamp=track.date.uts,
-          title="Remove this scrobble")
-        i.fa.fa-trash-o
-        |  Remove
-
 
 mixin listDuplicates()
   .list-duplicates.hidden
@@ -28,23 +13,6 @@ mixin listDuplicates()
           span.warning This is permanent!
 
     .pure-g.js-track-remover
-      //- .pure-u-1
-      //-   .title-wrap.clearfix
-      //-     .pull-left
-      //-       h2.t3.flex-center.marginless
-      //-         span.badge.js-duplicate-count= duplicates.length
-      //-         span !{ ' Duplicates.' }
-      //-     .pull-right
-      //-       button.pure-button.btn-error.js-remove-all.fade.in
-      //-         i.fa.fa-exclamation-circle
-      //-         |  Remove all
-      //-   ul.duplicate-list
-      //-     each duplicate in locals.duplicates
-      //-       +trackRow(duplicate)
-      //- .pure-u-1.js-none-left.hidden
-      //-   p.t4 There are no duplicates left
-      //-   p
-      //-     a.pure-button(href="/") Home
 
 
 
@@ -53,7 +21,7 @@ mixin noDuplicates()
   .hidden.no-duplicates
     .pure-g
       .pure-u-1
-        h1
+        h1.t2
           | !{ 'No duplicates found for ' }
           em= locals.artist
 
@@ -61,12 +29,13 @@ mixin noDuplicates()
 block content
   +listDuplicates()
   +noDuplicates()
-  .list-loading-msg
+  .list-loading-msg(data-artist=locals.artist)
     .pure-g
       .pure-u-1
-        h2.t1 !{ 'Looking for duplicates for ' + locals.artist + '.' }
-  //- if ( locals.duplicates.length > 0 )
-  //- else
+        h2.t2 !{ 'Looking for duplicates for <em>' + locals.artist + '</em>.' }
+      .pure-u-1.ghost-center-wrap.text-center.duplicates-loader
+        .ghost-center
+          +loaderDots('Talking to Last.fm...')
 
 
 block require

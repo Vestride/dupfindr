@@ -85,6 +85,28 @@ module.exports = function(grunt) {
         src: 'temp/css/styles.css',
         dest: 'public/css/styles.css'
       }
+    },
+
+    jade: {
+      compile: {
+        options: {
+          compileDebug: true,
+          amd: true,
+          namespace: false,
+          client: true,
+          data: {
+            glen: true
+          }
+        },
+        files: [{
+          expand: true,
+          filter: 'isFile',
+          cwd: 'src/templates/',
+          src: ['**'],
+          dest: 'public/js/templates/',
+          ext: '.js'
+        }]
+      }
     }
   });
 
@@ -92,6 +114,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-sass');
+  grunt.loadNpmTasks('grunt-contrib-jade');
   grunt.loadNpmTasks('grunt-autoprefixer');
 
   // Default task(s).
@@ -116,6 +139,7 @@ module.exports = function(grunt) {
     grunt.task.run('copy:js');
     grunt.task.run('copy:assets');
     grunt.task.run('css');
+    grunt.task.run('jade:compile');
   });
 
 

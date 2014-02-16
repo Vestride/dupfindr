@@ -243,6 +243,12 @@ app.get('/topartists', restrict, function(req, res) {
 app.get('/artist-duplicates', restrict, function(req, res) {
 
   var artist = decodeURIComponent(req.query.artist);
+
+  if ( !artist || artist === 'null' || artist === 'undefined' ) {
+    res.json(400, { error: 'No artist' });
+    return;
+  }
+
   var username = req.session.username;
   var params = {
     user: username,
@@ -254,7 +260,7 @@ app.get('/artist-duplicates', restrict, function(req, res) {
 
   lastfm.request(params, function(err, result) {
 
-    if ( err ) {
+    if ( err || !result.artisttracks.track ) {
       res.json(500, { ok: false, err: err, result: result });
       return;
     }

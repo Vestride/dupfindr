@@ -115,5 +115,46 @@ define(function(require) {
   };
 
 
+  Utilities.requestArtistDuplicates = function( artist ) {
+    var duplicates = Utilities.getStoredArtistDuplicates(artist);
+    if ( duplicates !== null ) {
+      var deferred = new $.Deferred();
+      deferred.resolveWith(null, [{
+        duplicates: JSON.parse(duplicates)
+      }]);
+      return deferred.promise();
+    }
+
+
+    var xhr = $.ajax({
+      url: '/artist-duplicates',
+      type: 'get',
+      data: {
+        artist: encodeURIComponent(artist)
+      },
+      dataType: 'json'
+    });
+
+    // Save to session storage.
+    xhr.done(function(data) {
+      Utilities.storeArtistDuplicates( data.artist, data.duplicates );
+    });
+
+    return xhr;
+  };
+
+
+  Utilities.getStoredArtistDuplicates = function( artist, parse ) {
+    var dups = window.sessionStorage.getItem( artist );
+    if ( dups && parse ) {
+      dups = JSON.parse( dups );
+    }
+    return dups;
+  };
+
+  Utilities.storeArtistDuplicates = function( artist, duplicates ) {
+    window.sessionStorage.setItem(artist, JSON.stringify( duplicates ));
+  };
+
   return Utilities;
 });

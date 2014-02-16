@@ -1,7 +1,8 @@
 
 define(function(require) {
   var $ = require('jquery'),
-      Mustache = require('libs/mustache');
+      Mustache = require('libs/mustache'),
+      Utilities = require('utilities');
 
 
   var artistCardTempalate = $('#mustache__artist-card').html().trim();
@@ -47,40 +48,12 @@ define(function(require) {
 
   ArtistLoader.prototype.preloadDuplicates = function( data ) {
     data.forEach(function(artist, i) {
+      var delay = Utilities.getStoredArtistDuplicates( artist.name ) === null ?
+          150 * i : 0;
       setTimeout(function() {
-        this.getDuplicatesForArtist( artist.name );
-      }.bind(this), 150 * i);
+        this.getArtistDuplicates( artist.name );
+      }.bind(this), delay);
     }, this);
-  };
-
-
-  ArtistLoader.prototype.getDuplicatesForArtist = function(artist) {
-
-    var duplicates = window.sessionStorage.getItem(artist);
-    if ( duplicates !== null ) {
-      duplicates = JSON.parse(duplicates);
-      this.displayDuplicatesForArtist( artist, duplicates );
-      return;
-    }
-
-
-    var xhr = $.ajax({
-      url: '/artist-duplicates',
-      type: 'get',
-      data: {
-        artist: encodeURIComponent(artist)
-      },
-      dataType: 'json'
-    });
-
-    xhr.done(function(data) {
-      console.log(data);
-      // Save to session storage.
-      window.sessionStorage.setItem(artist, JSON.stringify( data.duplicates ));
-      this.displayDuplicatesForArtist( artist, data.duplicates );
-    }.bind(this)).fail(function(data, status, statusText) {
-      console.log('getting ' + artist + ' failed: ' + status + ' - ' + statusText);
-    });
   };
 
 
@@ -96,8 +69,20 @@ define(function(require) {
         Strings.DUPLICATE :
         Strings.DUPLICATES;
 
-    $dups.removeClass('hidden');
+    $dups.removeClass( Utilities.ClassName.HIDDEN );
     $dups.text( numDuplicates + ' ' + textSuffix );
+  };
+
+
+  ArtistLoader.prototype.getArtistDuplicates = function( artist ) {
+    var wait = Utilities.requestArtistDuplicates( artist );
+
+    wait.done(function(data) {
+      console.log(data);
+      this.displayDuplicatesForArtist( artist, data.duplicates );
+    }.bind(this)).fail(function(data, status, statusText) {
+      console.log('getting ' + artist + ' failed: ' + status + ' - ' + statusText);
+    });
   };
 
 

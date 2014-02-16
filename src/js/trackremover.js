@@ -24,8 +24,24 @@ define(function(require) {
   };
 
 
-  TrackRemover.prototype.handleTrackRemoved = function() {
+  TrackRemover.prototype.handleTrackRemoved = function(evt, trackData) {
+    this.decrementCounter();
+
     if ( this.duplicateCount > 0 ) {
+      var removedTimestamp = parseInt(trackData.timestamp, 10);
+      var storedDuplicates = Utilities.getStoredArtistDuplicates(trackData.artist, true);
+      var timestamps = storedDuplicates.map(function(obj) {
+        return parseInt( obj.date.uts, 10 );
+      });
+
+      var index = timestamps.indexOf( removedTimestamp );
+
+      if ( index !== -1 ) {
+        storedDuplicates.splice( index, 1 );
+      }
+
+      Utilities.storeArtistDuplicates( trackData.artist, storedDuplicates );
+
       return;
     }
     var $zeroMessage = this.$el.find('.js-none-left'),
@@ -33,14 +49,13 @@ define(function(require) {
 
     $siblings.addClass('hidden');
     $zeroMessage.removeClass('hidden');
-
   };
 
 
   TrackRemover.prototype.removeScrobble = function(buttonEl) {
-    var data = buttonEl.dataset;
+    var trackData = buttonEl.dataset;
 
-    if ( data.isLoading === "true" ) {
+    if ( trackData.isLoading === "true" ) {
       console.log('hey i\'m still doing stuff here.');
       return;
     }
@@ -51,12 +66,12 @@ define(function(require) {
     return $.ajax({
       url: 'remove-track',
       type: 'post',
-      data: data,
+      data: trackData,
       dataType: 'json'
     }).done(function( data ) {
       console.log(data);
       self.removeRow( $(buttonEl).closest('li') );
-      $(self).trigger('trackremoved');
+      $(self).trigger('trackremoved', [trackData]);
     }).fail(function(data, status, statusText) {
       console.log('remove track failed: ' + status + ' - ' + statusText);
     }).always(function() {
@@ -107,7 +122,6 @@ define(function(require) {
 
 
   TrackRemover.prototype.removeRow = function( $row ) {
-    this.decrementCounter();
     $row.addClass('remove-item');
     // Don't remove it from the DOM because that will change the nth-child styling.
   };
