@@ -1,5 +1,6 @@
 
 var fs = require('fs');
+var _ = require('underscore');
 var common = require('./common');
 var lastfm = require('./lastfm');
 var user = require('./user');
@@ -9,38 +10,36 @@ var helpers = require('./helpers');
 module.exports = function( app ) {
 
 
-  app.get('/topartists', user.restrict, function(req, res) {
+  app.get('/top-artists', user.restrict, function(req, res) {
+    var page = req.query.page || 0;
     var params = {
       user: req.session.username,
       method: 'user.gettopartists',
-      limit: 50,
+      limit: 12,
+      page: 0
     };
 
-    // lastfm.request(params, function(err, result) {
-    fs.readFile('./test/topartists.json', function (err, data) {
-      var result = JSON.parse(data);
+    lastfm.request(params, function(err, result) {
+    // fs.readFile('./test/topartists.json', function (err, data) {
+    //   var result = JSON.parse(data);
       if ( err ) {
-        res.json(400, {
+        res.json(lastfm.getHttpErrorCode(err), {
           ok: false,
-          err: result.error,
+          err: err,
           message: result.message,
           generic: 'Oops, there was a problem.'
         });
         return;
       }
 
-      // common.log(result.topartists['@attr']);
-      // user
-      // type: 'overall'
-      // page
-      // perPage
-      // totalPages
-      // total
-
+      var attr = result.topartists['@attr'];
       var artists = result.topartists.artist;
-      // TODO remove when i have updated json
-      artists.length = 12;
+
       res.json({
+        page: attr.page,
+        perPage: attr.perPage,
+        totalPages: attr.totalPages,
+        total: attr.total,
         artists: artists
       });
     });
@@ -54,7 +53,6 @@ module.exports = function( app ) {
     if ( !artist || artist === 'null' || artist === 'undefined' ) {
       res.json(400, {
         ok: false,
-        err: result.error,
         message: 'No artist given',
         generic: 'Oops, there was a problem.'
       });
@@ -73,22 +71,20 @@ module.exports = function( app ) {
     lastfm.request(params, function(err, result) {
 
       if ( err || !result.artisttracks.track ) {
-        res.json(400, {
+        res.json(lastfm.getHttpErrorCode(err), {
           ok: false,
-          err: result.error,
+          err: err,
           message: result.message,
           generic: 'Oops, there was a problem.'
         });
         return;
       }
 
-      // console.log(result);
       var tracks = result.artisttracks.track;
-      console.log('Total tracks by ' + artist + ' = ' + tracks.length);
-
       var duplicates = helpers.getDuplicates(tracks);
       helpers.augmentTrackData(duplicates, username);
 
+      console.log('Total tracks by ' + artist + ' = ' + tracks.length);
       console.log('duplicates: ' + duplicates.length);
 
       res.json({
@@ -102,25 +98,38 @@ module.exports = function( app ) {
 
   // Ajax hook for deleting a scrobble.
   app.post('/remove-track', user.restrict, function(req, res) {
+
+    var artist = req.body.artist;
+    var track = req.body.track;
+    var timestamp = req.body.timestamp;
+
+    if ( _.isUndefined(artist) || _.isUndefined(track) || _.isUndefined(timestamp) ) {
+      res.json(400, {
+        ok: false,
+        err: err,
+        message: 'Missing required parameters',
+        generic: 'Oops, there was a problem.'
+      });
+      return;
+    }
+
     // Parameters are decoded already.
     var params = {
       method: 'library.removescrobble',
-      artist: req.body.artist,
-      track: req.body.track,
-      timestamp: req.body.timestamp,
+      artist: artist,
+      track: track,
+      timestamp: timestamp,
       sk: req.session.sk
     };
 
     lastfm.request(params, function(err, result) {
-      var status = 200;
       var resp = { ok: true };
       if ( err ) {
-        status = 501;
         resp.ok = false;
       }
 
       // Send json response.
-      res.json(status, resp);
+      res.json(lastfm.getHttpErrorCode(err), resp);
     });
   });
 

@@ -24,26 +24,14 @@ define(function(require) {
 
 
   ArtistLoader.prototype.getTopArtists = function() {
-    var top = Storage.getTopArtists(0);
-    if ( top && top.length > 0 ) {
-      this.populateArtists(top);
-      this.preloadDuplicates(top);
-      return;
-    }
+    var wait = Utilities.requestTopArtists(0);
 
-    var jqXhr = $.ajax({
-      url: '/topartists',
-      type: 'get',
-      data: {},
-      dataType: 'json'
-    });
-
-    jqXhr.done(function( data ) {
+    wait.done(function(data) {
       this.populateArtists(data.artists);
-      Storage.setTopArtists(data.artists);
       this.preloadDuplicates(data.artists);
-    }.bind(this)).fail(function(data, status, statusText) {
-      console.log('getting top artists failed: ' + status + ' - ' + statusText);
+    }.bind(this)).fail(function(jqXHR, status, statusText) {
+      var data = jqXHR.responseJSON || JSON.parse( jqXHR.responseText || '""' );
+      console.log('getting top artists failed - ' + statusText + ' - ' + data.message);
     });
   };
 
@@ -51,14 +39,15 @@ define(function(require) {
     var output = Mustache.render(artistCardTempalate, {
       artists: data
     });
-    $('#artist-cards').html( output );
+    $('#artist-cards').append( output );
+    $('#top-artists-loader').addClass( Utilities.ClassName.HIDDEN );
   };
 
 
   ArtistLoader.prototype.preloadDuplicates = function( data ) {
     data.forEach(function(artist, i) {
       var delay = Storage.getArtistDuplicates( artist.name ) === null ?
-          150 * i : 0;
+          175 * i : 0;
       setTimeout(function() {
         this.getArtistDuplicates( artist.name );
       }.bind(this), delay);
@@ -88,10 +77,9 @@ define(function(require) {
 
     wait.done(function(data) {
       this.displayDuplicatesForArtist( artist, data.duplicates );
-    }.bind(this)).fail(function(data, status, statusText) {
-      var data = JSON.parse( jqXHR.responseText );
-      console.log(data);
-      console.log('getting ' + artist + ' failed: ' + status + ' - ' + statusText);
+    }.bind(this)).fail(function(jqXHR, status, statusText) {
+      var data = jqXHR.responseJSON || JSON.parse( jqXHR.responseText || '""' );
+      console.log('getting ' + artist + ' failed - ' + statusText + ' - ' + data.message);
     });
   };
 

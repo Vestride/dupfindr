@@ -29,7 +29,7 @@ define(function(require) {
   }
 
   function showError(jqXHR) {
-    var data = JSON.parse( jqXHR.responseText );
+    var data = JSON.parse( jqXHR.responseText || '""' );
     $loadingMsg.find('.loading-title').text(data.generic);
     $loadingMsg.find('.error-placeholder').text(data.message);
     $loadingMsg.find('.duplicates-loader').addClass(Utilities.ClassName.HIDDEN);

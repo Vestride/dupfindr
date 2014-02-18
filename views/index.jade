@@ -10,20 +10,20 @@ block content
       p
         | Sometimes you can end up with duplicate - or more - scrobbles for a single track on Last.fm.
         | This app aims to remove those duplicate scrobble which distort your play counts and other stats.
-      p Click an artist or search for one below.
+      p Click an artist below or search for one.
 
-  .pure-g#artist-cards.artist-cards
-    .pure-u-1.ghost-center-wrap.text-center.artist-cards__loader
-      .ghost-center
-        +loaderMessage('Loading top artists...')
-
-  form.pure-g.pure-form(method="get", action="/duplicates-for-artist")
+  form.pure-g.pure-form.artist-search(method="get", action="/duplicates-for-artist")
     .pure-u-1
       p Search for an artist
       input(type="text", name="artist", placeholder="Artist Name", required)
-      br
-      br
       input.pure-button.pure-button-primary(type="submit", value="Find Duplicates")
+
+  .pure-g.artist-cards#artist-cards
+
+  .pure-g.top-artists#top-artists-loader
+    .pure-u-1.ghost-center-wrap.text-center.top-artists__loader
+      .ghost-center
+        +loaderMessage('Loading top artists...')
 
   include mustache/artist-card.html
 

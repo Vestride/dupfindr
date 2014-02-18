@@ -127,7 +127,7 @@ define(function(require) {
     }
 
 
-    var xhr = $.ajax({
+    var jqXHR = $.ajax({
       url: '/artist-duplicates',
       type: 'get',
       data: {
@@ -137,11 +137,39 @@ define(function(require) {
     });
 
     // Save to session storage.
-    xhr.done(function(data) {
+    jqXHR.done(function(data) {
       Storage.setArtistDuplicates( data.artist, data.duplicates );
     });
 
-    return xhr;
+    return jqXHR;
+  };
+
+
+  Utilities.requestTopArtists = function( page ) {
+    page = page || 0;
+    var top = Storage.getTopArtists( page );
+    if ( top !== null ) {
+      var promise = new $.Deferred();
+      promise.resolveWith(null, [{
+        artists: top
+      }]);
+      return promise.promise();
+    }
+
+    var jqXHR = $.ajax({
+      url: '/top-artists',
+      type: 'get',
+      data: {
+        page: page
+      },
+      dataType: 'json'
+    });
+
+    jqXHR.done(function( data ) {
+      Storage.setTopArtists(data.artists);
+    });
+
+    return jqXHR;
   };
 
 

@@ -81,12 +81,29 @@
   background-color: $info;
 }
 
+
+@import "utilities";
+
+
+
+
+.artist-search {
+  margin-bottom: 40px;
+
+  .pure-button {
+    margin-left: 10px;
+  }
+}
+
+
 .artist-card {
   display: block;
   background: $gray80;
   text-decoration: none;
   color: $wetAsphalt;
 }
+
+
 
 .artist-card__img img {
   width: 100%;
@@ -117,15 +134,14 @@
 }
 
 .artist-cards {
-  transition: .4s ease;
-
-  .artist-cards__loader {
-    height: 400px;
-  }
 }
 
 
-@import "utilities";
+.top-artists__loader {
+  height: 400px;
+}
+
+
 
 @import "duplicates";
 

@@ -21,7 +21,7 @@ define(function(require) {
 
 
   TrackRemover.prototype.handleRemoveTrack = function(evt) {
-    this.removeScrobble(evt.target);
+    this.removeScrobble(evt.currentTarget);
   };
 
 
@@ -60,6 +60,11 @@ define(function(require) {
       return;
     }
 
+    if ( !trackData.artist || !trackData.timestamp || !trackData.track ) {
+      console.log('Missing data', trackData);
+      return;
+    }
+
     this.showLoadingState( buttonEl );
 
     var self = this;
@@ -72,7 +77,7 @@ define(function(require) {
       console.log(data);
       self.removeRow( $(buttonEl).closest('li') );
       $(self).trigger('trackremoved', [trackData]);
-    }).fail(function(data, status, statusText) {
+    }).fail(function(jqXHR, status, statusText) {
       console.log('remove track failed: ' + status + ' - ' + statusText);
     }).always(function() {
       self.hideLoadingState( buttonEl );
@@ -84,8 +89,8 @@ define(function(require) {
     // var dfd = new $.Deferred();
     // dfd.done(function() {
     //   self.removeRow( $(buttonEl).closest('li') );
-    //   $(self).trigger('trackremoved');
-    // }).fail(function(data, status, statusText) {
+    //   $(self).trigger('trackremoved', [trackData]);
+    // }).fail(function(jqXHR, status, statusText) {
     //   console.log('remove track failed: ' + status + ' - ' + statusText);
     // }).always(function() {
     //   self.hideLoadingState( buttonEl );
@@ -135,19 +140,21 @@ define(function(require) {
 
   TrackRemover.prototype.hideLoadingState = function( button ) {
     button.dataset.isLoading = false;
-    button.textContent = button.dataset.restingText;
+    button.children[0].style.display = '';
+    button.children[1].textContent = button.dataset.restingText;
     button.disabled = false;
   };
 
 
   TrackRemover.prototype.showLoadingState = function( button ) {
-    var currentText = button.textContent;
+    var currentText = button.children[1].textContent;
 
     // Write on the next frame.
     requestAnimationFrame(function() {
       button.dataset.restingText = currentText;
       button.dataset.isLoading = true;
-      button.textContent = 'Loading...';
+      button.children[0].style.display = 'none';
+      button.children[1].textContent = 'Loading...';
       button.disabled = true;
     });
   };
