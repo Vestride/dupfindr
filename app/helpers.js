@@ -7,12 +7,12 @@ var _ = require('underscore');
  * @param  {Object}  track2 The second scrobble.
  * @return {boolean} Whether the tracks should be considered the same.
  */
-module.exports.isSameScrobble = function(track1, track2) {
+exports.isSameScrobble = function(track1, track2) {
   return track1.date.uts === track2.date.uts && track1.name === track2.name;
 };
 
 
-module.exports.getDuplicates = function(tracks) {
+exports.getDuplicates = function(tracks) {
   var scrobbles = {};
   var duplicates = [];
   for ( var i = 0, len = tracks.length; i < len; i++ ) {
@@ -21,7 +21,7 @@ module.exports.getDuplicates = function(tracks) {
 
     if ( scrobbles[ uts ] === undefined ) {
       scrobbles[ uts ] = track;
-    } else if ( isSameScrobble( scrobbles[ uts ], track ) ) {
+    } else if ( exports.isSameScrobble( scrobbles[ uts ], track ) ) {
       duplicates.push(track);
     }
   }
@@ -30,7 +30,7 @@ module.exports.getDuplicates = function(tracks) {
 };
 
 
-module.exports.augmentTrackData = function(tracks, user) {
+exports.augmentTrackData = function(tracks, user) {
   _.forEach(tracks, function(track) {
     track.artist.name = track.artist['#text'];
     track.date.text = track.date['#text'];

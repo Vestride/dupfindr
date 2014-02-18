@@ -10,5 +10,6 @@ console.log('listening on port ' + port);
 var config = require('./config')(express, app);
 var db = require('./database').init();
 var routes = require('./routes')(app);
+var api = require('./api')(app);
 
 
