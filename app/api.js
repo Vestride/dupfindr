@@ -11,12 +11,12 @@ module.exports = function( app ) {
 
 
   app.get('/top-artists', user.restrict, function(req, res) {
-    var page = req.query.page || 0;
+    var page = req.query.page || 1;
     var params = {
       user: req.session.username,
       method: 'user.gettopartists',
       limit: 12,
-      page: 0
+      page: page
     };
 
     lastfm.request(params, function(err, result) {
@@ -70,7 +70,7 @@ module.exports = function( app ) {
 
     lastfm.request(params, function(err, result) {
 
-      if ( err || !result.artisttracks.track ) {
+      if ( err || !(result && result.artisttracks && result.artisttracks.track) ) {
         res.json(lastfm.getHttpErrorCode(err), {
           ok: false,
           err: err,

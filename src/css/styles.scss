@@ -95,6 +95,9 @@
   }
 }
 
+.artist-cards {
+  padding-bottom: 40px;
+}
 
 .artist-card {
   display: block;
@@ -141,6 +144,10 @@
   height: 400px;
 }
 
+
+#top-artists-load-more {
+  padding-bottom: 40px;
+}
 
 
 @import "duplicates";

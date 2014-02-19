@@ -120,9 +120,13 @@ define(function(require) {
     var duplicates = Storage.getArtistDuplicates(artist);
     if ( duplicates !== null ) {
       var deferred = new $.Deferred();
-      deferred.resolveWith(null, [{
-        duplicates: JSON.parse(duplicates)
-      }]);
+
+      // The request is expected to be async.
+      setTimeout(function() {
+        deferred.resolveWith(null, [{
+          duplicates: JSON.parse(duplicates)
+        }]);
+      }, 100);
       return deferred.promise();
     }
 
@@ -150,9 +154,13 @@ define(function(require) {
     var top = Storage.getTopArtists( page );
     if ( top !== null ) {
       var promise = new $.Deferred();
-      promise.resolveWith(null, [{
-        artists: top
-      }]);
+
+      // The request is expected to be async.
+      setTimeout(function() {
+        promise.resolveWith(null, [{
+          artists: top
+        }]);
+      }, 100);
       return promise.promise();
     }
 
@@ -160,7 +168,7 @@ define(function(require) {
       url: '/top-artists',
       type: 'get',
       data: {
-        page: page
+        page: page + 1 // last.fm's api isn't zero-based here...
       },
       dataType: 'json'
     });
@@ -170,6 +178,28 @@ define(function(require) {
     });
 
     return jqXHR;
+  };
+
+
+  Utilities.enableButton = function( buttonEl ) {
+    buttonEl.dataset.isLoading = false;
+    buttonEl.children[0].style.display = '';
+    buttonEl.children[1].textContent = buttonEl.dataset.restingText;
+    buttonEl.disabled = false;
+  };
+
+
+  Utilities.disableButton = function( buttonEl ) {
+    var currentText = buttonEl.children[1].textContent;
+
+    // Write on the next frame.
+    requestAnimationFrame(function() {
+      buttonEl.dataset.restingText = currentText;
+      buttonEl.dataset.isLoading = true;
+      buttonEl.children[0].style.display = 'none';
+      buttonEl.children[1].textContent = 'Loading...';
+      buttonEl.disabled = true;
+    });
   };
 
 

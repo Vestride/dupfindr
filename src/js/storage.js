@@ -26,6 +26,9 @@ define(function(require) {
 
     if ( $.isNumeric( page ) ) {
       top = top.splice(page * 12, 12);
+      if ( top.length === 0 ) {
+        top = null;
+      }
     }
 
     return top;

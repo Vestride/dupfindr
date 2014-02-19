@@ -139,24 +139,12 @@ define(function(require) {
 
 
   TrackRemover.prototype.hideLoadingState = function( button ) {
-    button.dataset.isLoading = false;
-    button.children[0].style.display = '';
-    button.children[1].textContent = button.dataset.restingText;
-    button.disabled = false;
+    Utilities.enableButton( button );
   };
 
 
   TrackRemover.prototype.showLoadingState = function( button ) {
-    var currentText = button.children[1].textContent;
-
-    // Write on the next frame.
-    requestAnimationFrame(function() {
-      button.dataset.restingText = currentText;
-      button.dataset.isLoading = true;
-      button.children[0].style.display = 'none';
-      button.children[1].textContent = 'Loading...';
-      button.disabled = true;
-    });
+    Utilities.disableButton( button );
   };
 
   return TrackRemover;

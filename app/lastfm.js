@@ -65,17 +65,25 @@ exports.request = function(params, fn) {
 
   // Create query string.
   } else {
-    firstParam = common.BASE_URL + '?';
-    for ( var key in requestParams ) {
-      firstParam += '&' + key + '=' + encodeURIComponent( params[ key ] );
-    }
+    var i = 0;
+    firstParam = _.reduce(requestParams, function(memo, value, key) {
+      var glue = i === 0 ? '?' : '&';
+      i++;
+      return memo + glue + key + '=' + encodeURIComponent( value );
+    }, common.BASE_URL);
   }
 
-  console.log(httpVerb.toUpperCase() + ': ', firstParam);
+  console.log(httpVerb.toUpperCase() + ':', firstParam);
 
   request[httpVerb](firstParam, function(err, response, body) {
-    var resp = body.length > 200 ? body.substring(0, 200) + '| truncated' : body;
-    console.log('last.fm response:', resp);
+    var resp = body && body.length > 200 ? body.substring(0, 200) + '| truncated' : body;
+
+
+    if ( resp ) {
+      console.log('last.fm response:', resp);
+    } else {
+      console.log('no last.fm response');
+    }
 
     if ( err ) {
       console.log('request error:', err);
@@ -86,7 +94,12 @@ exports.request = function(params, fn) {
     try {
       result = JSON.parse(body);
     } catch(e) {
-      console.log('Unable to parse last.fm\'s response:', resp);
+      console.log(response.responseCode);
+      result.error = response.responseCode;
+      if ( /<\?xml/.test(body) ) {
+        result.message = 'Last.fm replied with XML even though we requested JSON';
+      }
+      console.log('Unable to parse last.fm\'s response.');
     }
 
     var error = result.error ? result.error : null;
@@ -188,10 +201,20 @@ exports.getHttpErrorCode = function( errorCode ) {
       httpCode = 400;
       break;
 
+    case 404:
+      httpCode = 404;
+      break;
+
+    case 500:
+      httpCode = 500;
+      break;
+
     // Service unavailable.
     case 8:
+    case 503:
       httpCode = 503;
       break;
+
     default:
       httpCode = 400;
   }

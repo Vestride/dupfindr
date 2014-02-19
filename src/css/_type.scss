@@ -12,6 +12,7 @@ a {
     color: $river;
   }
 
+  &:not(.pure-button):focus,
   &:not(.pure-button):hover {
     text-decoration: underline;
   }

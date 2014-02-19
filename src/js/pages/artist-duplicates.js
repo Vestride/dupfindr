@@ -10,7 +10,13 @@ define(function(require) {
   var $loadingMsg = $('.list-loading-msg');
   var artist = $loadingMsg.data('artist');
 
-  function showContent(data) {
+  function showContent(data, textStatus, jqXHR) {
+    // This should always be an array. If it's not, show an error message.
+    if ( !data || !data.duplicates || !data.duplicates.length ) {
+      showError(jqXHR);
+      return;
+    }
+
     var dups = data.duplicates;
     var hasDuplicates = dups.length > 0;
     var selector = hasDuplicates ? '.list-duplicates' : '.no-duplicates';
