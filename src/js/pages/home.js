@@ -90,7 +90,7 @@ define(function(require) {
 
 
   ArtistLoader.prototype.displayDuplicatesForArtist = function(artist, duplicates) {
-    if ( !duplicates || duplicates.length === 0 ) {
+    if ( !duplicates ) {
       return;
     }
 
@@ -100,6 +100,9 @@ define(function(require) {
         Strings.DUPLICATES;
 
     $dups.removeClass( Utilities.ClassName.HIDDEN );
+    if ( duplicates.length === 0 ) {
+      $dups.addClass('no-duplicates');
+    }
     $dups.text( duplicates.length + ' ' + textSuffix );
   };
 

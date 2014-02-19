@@ -130,6 +130,10 @@
   background-color: rgba($alizarin, 0.5);
   text-align: center;
   min-width: 20px;
+
+  &.no-duplicates {
+    background-color: rgba($emerald, 0.5)
+  }
 }
 
 .artist-card__inner {
