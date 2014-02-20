@@ -12,7 +12,9 @@ define(function(require) {
 
 
   Storage.setArtistDuplicates = function( artist, duplicates ) {
-    window.sessionStorage.setItem(artist, JSON.stringify( duplicates ));
+    if ( artist !== undefined ) {
+      window.sessionStorage.setItem(artist, JSON.stringify( duplicates ));
+    }
   };
 
 

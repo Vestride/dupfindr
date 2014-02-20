@@ -12,7 +12,7 @@ define(function(require) {
 
   function showContent(data, textStatus, jqXHR) {
     // This should always be an array. If it's not, show an error message.
-    if ( !data || !data.duplicates || !data.duplicates.length ) {
+    if ( !data || !data.duplicates ) {
       showError(jqXHR);
       return;
     }

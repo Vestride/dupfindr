@@ -7,7 +7,7 @@ module.exports = function(express, app) {
 
   app.set('view engine', 'jade');
 
-  app.use(express.static(path.join(__dirname, '../', 'public')));
+  app.use(express.static(common.directory + 'public'));
 
   // Request body parsing middleware supporting JSON and urlencoded requests.
   app.use(express.json());

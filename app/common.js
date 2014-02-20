@@ -1,5 +1,5 @@
-
 // common.js
+var path = require('path');
 var util = require('util');
 
 exports.API_KEY = '390660b5be6817c32953e61f88d633a6';
@@ -10,3 +10,5 @@ exports.BASE_URL = 'http://ws.audioscrobbler.com/2.0/';
 exports.log = function(object) {
   console.log(util.inspect(object, false, null));
 };
+
+exports.directory = path.join(__dirname, '../');

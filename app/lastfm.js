@@ -69,7 +69,7 @@ exports.request = function(params, fn) {
     firstParam = _.reduce(requestParams, function(memo, value, key) {
       var glue = i === 0 ? '?' : '&';
       i++;
-      return memo + glue + key + '=' + encodeURIComponent( value );
+      return memo + glue + key + '=' + value;
     }, common.BASE_URL);
   }
 
@@ -100,6 +100,7 @@ exports.request = function(params, fn) {
         result.error = response.responseCode;
       }
 
+      // Last.fm sometimes returns xml even when format=json, and incomplete xml at that!
       if ( /<\?xml/.test(body) ) {
         result.message = 'Last.fm replied with XML even though we requested JSON';
       }
@@ -144,6 +145,11 @@ exports.getApiSignature = function(params) {
 
 
 exports.getCall = function( params ) {
+  // Ensure each component is encoded correctly.
+  _.each(params, function(value, key, obj) {
+    obj[key] = encodeURIComponent( value );
+  });
+
   params.api_key = common.API_KEY;
 
   if ( requiresSignature( params.method ) ) {

@@ -78,7 +78,8 @@ define(function(require) {
       self.removeRow( $(buttonEl).closest('li') );
       $(self).trigger('trackremoved', [trackData]);
     }).fail(function(jqXHR, status, statusText) {
-      console.log('remove track failed: ' + status + ' - ' + statusText);
+      var data = jqXHR.responseJSON || JSON.parse( jqXHR.responseText || '""' );
+      console.log('remove track failed - ' + statusText + ' - ' + data.message);
     }).always(function() {
       self.hideLoadingState( buttonEl );
     });
