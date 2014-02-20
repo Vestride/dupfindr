@@ -68,6 +68,13 @@ module.exports = function( app ) {
       // page: 2
     };
 
+    // TODO(glen): See if there are any duplicate tracks stored in the database.
+    // If there are, get those and request tracks from that timestamp until now.
+    // If there aren't, request all tracks.
+    // Although, for every duplicate which is removed, the database will have to be
+    // updated and if the user removes the scrobble from somewhere else, the
+    // database has no way of knowing that...
+
     lastfm.request(params, function(err, result) {
 
       if ( err || !(result && result.artisttracks && result.artisttracks.track) ) {

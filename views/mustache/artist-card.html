@@ -1,7 +1,8 @@
 <script class="mustache-template" id="mustache__artist-card" type="text/x-mustache-template">
   {{#artists}}
     <div class="pure-u-1-3">
-      <a class="artist-card" href="duplicates-for-artist?artist={{ name }}" data-artist="{{ name }}">
+      <a class="artist-card" href="duplicates-for-artist?artist={{ name }}" data-artist="{{ name }}"
+          data-plays="{{ playcount }}">
         <div class="artist-card__img keep-ratio HD">
           <div class="keep-ratio-inner">
             <img src="{{ image.4.#text }}" alt="{{ name }}" />

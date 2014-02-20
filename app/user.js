@@ -1,5 +1,6 @@
 // user.js
 var common = require('./common');
+var lastfm = require('./lastfm');
 var db = require('./database').getDatabase();
 
 // No clue if this is bad to do or not.

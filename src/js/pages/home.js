@@ -94,7 +94,8 @@ define(function(require) {
       return;
     }
 
-    var $dups = $('.artist-card[data-artist="' + artist + '"] .artist-card__duplicates');
+    var $card = $('.artist-card[data-artist="' + artist + '"]');
+    var $dups = $card.find('.artist-card__duplicates');
     var textSuffix = duplicates.length === 1 ?
         Strings.DUPLICATE :
         Strings.DUPLICATES;
@@ -104,6 +105,7 @@ define(function(require) {
       $dups.addClass('no-duplicates');
     }
     $dups.text( duplicates.length + ' ' + textSuffix );
+    $card.attr('data-duplicates', duplicates.length);
   };
 
 

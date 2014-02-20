@@ -1,0 +1,29 @@
+{
+  "name": "dupfindr",
+  "version": "0.0.0",
+  "homepage": "https://github.com/Vestride/dupfindr",
+  "authors": [
+    "Glen Cheney <cheney.glen@gmail.com>"
+  ],
+  "description": "Locate and delete duplicate scrobbles from Last.fm",
+  "main": "Gruntfile.js",
+  "keywords": [
+    "last.fm",
+    "last",
+    "duplicate",
+    "delete",
+    "scrobble"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "requirejs": "~2.1.11"
+  }
+}

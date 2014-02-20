@@ -76,7 +76,7 @@ exports.request = function(params, fn) {
   console.log(httpVerb.toUpperCase() + ':', firstParam);
 
   request[httpVerb](firstParam, function(err, response, body) {
-    var resp = body && body.length > 200 ? body.substring(0, 200) + '| truncated' : body;
+    var resp = body && body.length > 100 ? body.substring(0, 100) + '| truncated' : body;
 
 
     if ( resp ) {
@@ -94,8 +94,12 @@ exports.request = function(params, fn) {
     try {
       result = JSON.parse(body);
     } catch(e) {
-      console.log(response.responseCode);
-      result.error = response.responseCode;
+      // See if there was a response code from last.fm (like 500 or 503)
+      if ( response && response.responseCode ) {
+        console.log(response.responseCode);
+        result.error = response.responseCode;
+      }
+
       if ( /<\?xml/.test(body) ) {
         result.message = 'Last.fm replied with XML even though we requested JSON';
       }
