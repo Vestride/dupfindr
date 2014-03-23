@@ -1,5 +1,5 @@
 
-define(function(require) {
+define(function() {
   var Storage = {};
 
   Storage.getArtistDuplicates = function( artist, parse ) {

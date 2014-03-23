@@ -145,9 +145,11 @@ exports.getApiSignature = function(params) {
 
 
 exports.getCall = function( params ) {
-  // Ensure each component is encoded correctly.
+  var isPost = isWriteMethod( params.method );
+  // Ensure each component is encoded correctly. Using the request node module,
+  // it seems the values should not be encoded here when it uses form data.
   _.each(params, function(value, key, obj) {
-    obj[key] = encodeURIComponent( value );
+    obj[key] = isPost ? value : encodeURIComponent( value );
   });
 
   params.api_key = common.API_KEY;

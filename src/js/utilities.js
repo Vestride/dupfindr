@@ -139,9 +139,12 @@ define(function(require) {
       },
       dataType: 'json'
     });
+    console.log('Requesting duplicates for', encodeURIComponent(artist));
 
     // Save to session storage.
     jqXHR.done(function(data) {
+      console.log('Saving %d duplictes for %s', Array.isArray(data.duplicates) ?
+          data.duplicates.length : -1, data.artist);
       Storage.setArtistDuplicates( data.artist, data.duplicates );
     });
 

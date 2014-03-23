@@ -33,6 +33,7 @@ module.exports = function( app ) {
   app.get('/duplicates-for-artist', user.restrict, function(req, res) {
     var artist = req.query.artist;
     var username = req.session.username;
+    console.log('Duplicates for artist:', artist);
 
     res.render('duplicates', {
       user: username,

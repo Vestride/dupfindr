@@ -49,6 +49,7 @@ module.exports = function( app ) {
   app.get('/artist-duplicates', user.restrict, function(req, res) {
 
     var artist = decodeURIComponent(req.query.artist);
+    console.log('get:', artist);
 
     if ( !artist || artist === 'null' || artist === 'undefined' ) {
       res.json(400, {
@@ -109,6 +110,7 @@ module.exports = function( app ) {
     var artist = req.body.artist;
     var track = req.body.track;
     var timestamp = req.body.timestamp;
+    console.log(artist, '-', track);
 
     if ( _.isUndefined(artist) || _.isUndefined(track) || _.isUndefined(timestamp) ) {
       res.json(400, {

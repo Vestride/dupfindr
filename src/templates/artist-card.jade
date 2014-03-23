@@ -1,0 +1,11 @@
+each artist in locals
+  div.pure-u-1-3
+    a.artist-card(href='duplicates-for-artist?artist=' + artist.name,
+        data-artist=artist.name, data-plays=artist.playcount)
+      div.artist-card__img.keep-ratio.HD
+        div.keep-ratio-inner
+          img(src=artist.image[4]['#text'], alt=artist.name)
+          p.artist-card__playcount.marginless !{ artist.playcount + ' plays'}
+          p.artist-card__duplicates.marginless.hidden !{ ' duplicates' }
+      div.artist-card__inner
+        p.artist-card__name.marginless.text-overflow= artist.name

@@ -1,12 +1,9 @@
 
 define(function(require) {
-  var $ = require('jquery'),
-      Mustache = require('libs/mustache'),
-      Utilities = require('utilities'),
-      Storage = require('storage');
-
-
-  var artistCardTempalate = $('#mustache__artist-card').html().trim();
+  var $ = require('jquery');
+  var Utilities = require('utilities');
+  var Storage = require('storage');
+  var artistCardTemplate = require('templates/artist-card');
 
   var Strings = {
     DUPLICATES: 'duplicates',
@@ -69,10 +66,9 @@ define(function(require) {
   };
 
   ArtistLoader.prototype.populateArtists = function( data ) {
-    var output = Mustache.render(artistCardTempalate, {
-      artists: data
-    });
-    $('#artist-cards').append( output );
+    console.log('populate artists with:', data);
+    var html = artistCardTemplate( data );
+    $('#artist-cards').append( html );
     $('#top-artists-loader').addClass( Utilities.ClassName.HIDDEN );
     $('#top-artists-load-more').removeClass( Utilities.ClassName.HIDDEN );
   };

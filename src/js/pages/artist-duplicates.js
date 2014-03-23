@@ -1,10 +1,9 @@
 
 define(function(require) {
   var $ = require('jquery');
-  var Mustache = require('libs/mustache');
   var Utilities = require('utilities');
   var TrackRemover = require('trackremover');
-  var Jade = require('libs/runtime');
+  var runtime = require('jaderuntime');
   var tableTemplate = require('templates/track-remover-table');
 
   var $loadingMsg = $('.list-loading-msg');

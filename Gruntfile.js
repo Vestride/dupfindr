@@ -20,6 +20,10 @@ module.exports = function(grunt) {
       js: {
         files: 'src/js/**/*.js',
         tasks: ['copy:js']
+      },
+      jade: {
+        files: 'src/templates/**/*.jade',
+        tasks: ['jade:compile']
       }
     },
 
