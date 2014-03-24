@@ -1,5 +1,8 @@
 var path = require('path');
 var common = require('./common');
+var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser');
+var session = require('express-session');
 
 module.exports = function(express, app) {
 
@@ -10,16 +13,13 @@ module.exports = function(express, app) {
   app.use(express.static(common.directory + 'public'));
 
   // Request body parsing middleware supporting JSON and urlencoded requests.
-  app.use(express.json());
-  app.use(express.urlencoded());
+  app.use(bodyParser());
 
-  app.use(express.cookieParser('scrobblescrewups'));
+  app.use(cookieParser('scrobblescrewups'));
   // Populates req.session
-  app.use(express.session());
+  app.use(session());
 
 
   // Give templates access to the API key.
-  app.locals({
-    API_KEY: common.API_KEY
-  });
+  app.locals.API_KEY = common.API_KEY;
 };
