@@ -1,6 +1,3 @@
-
-// lastfm.js
-
 /**
  * @fileoverview Things that deal with the Last.fm API.
  */
@@ -50,32 +47,33 @@ function requiresSignature( method ) {
 
 
 exports.request = function(params, fn) {
-  var httpVerb = 'get';
-  var firstParam;
+  var method;
+  var data;
   var requestParams = exports.getCall( params );
 
   // Posting has to be done as a js object.
   if ( isWriteMethod( params.method ) ) {
-    httpVerb = 'post';
+    method = 'post';
 
-    firstParam = {
+    data = {
       uri: common.BASE_URL,
       form: requestParams
     };
 
   // Create query string.
   } else {
+    method = 'get';
     var i = 0;
-    firstParam = _.reduce(requestParams, function(memo, value, key) {
+    data = _.reduce(requestParams, function(memo, value, key) {
       var glue = i === 0 ? '?' : '&';
       i++;
       return memo + glue + key + '=' + value;
     }, common.BASE_URL);
   }
 
-  console.log(httpVerb.toUpperCase() + ':', firstParam);
+  console.log(method.toUpperCase() + ':', data);
 
-  request[httpVerb](firstParam, function(err, response, body) {
+  function callback(err, response, body) {
     var resp = body && body.length > 100 ? body.substring(0, 100) + '| truncated' : body;
 
 
@@ -110,7 +108,9 @@ exports.request = function(params, fn) {
     var error = result.error ? result.error : null;
 
     fn(error, result);
-  });
+  }
+
+  request[method](data, callback);
 };
 
 
@@ -145,6 +145,10 @@ exports.getApiSignature = function(params) {
 
 
 exports.getCall = function( params ) {
+  // TODO: This fails with song names like Ænima, even though `request` should
+  // be url encoding the parameters... right? I can't figure out how to tell
+  // `request` not to and do it myself :( Maybe I'll have to ditch `request` for
+  // some http methods.
   var isPost = isWriteMethod( params.method );
   // Ensure each component is encoded correctly. Using the request node module,
   // it seems the values should not be encoded here when it uses form data.
