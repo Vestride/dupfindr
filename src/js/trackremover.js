@@ -2,6 +2,7 @@
 
 define(function(require) {
   var $ = require('jquery');
+  var _ = require('underscore');
   var Utilities = require('utilities');
   var Settings = require('settings');
   var Storage = require('storage');
@@ -53,9 +54,9 @@ define(function(require) {
 
 
   TrackRemover.prototype.removeScrobble = function(buttonEl) {
-    var trackData = buttonEl.dataset;
+    var trackData = _.clone(buttonEl.dataset);
 
-    if ( trackData.isLoading === "true" ) {
+    if ( trackData.isLoading === 'true' ) {
       console.log('hey i\'m still doing stuff here.');
       return;
     }
@@ -65,13 +66,17 @@ define(function(require) {
       return;
     }
 
+    var encodedData = _.mapValues(trackData, function(value) {
+      return encodeURIComponent(value);
+    });
+
     this.showLoadingState( buttonEl );
 
     var self = this;
     return $.ajax({
       url: 'remove-track',
       type: 'post',
-      data: trackData,
+      data: encodedData,
       dataType: 'json'
     }).done(function( data ) {
       console.log(data);

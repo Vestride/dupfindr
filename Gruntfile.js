@@ -33,9 +33,13 @@ module.exports = function(grunt) {
         files: [
           {
             expand: true,
-            cwd: 'bower_components/requirejs/',
-            src: ['require.js'],
-            dest: 'public/js/'
+            flatten: true,
+            cwd: 'bower_components/',
+            src: [
+              'requirejs/require.js',
+              'underscore/underscore.js'
+            ],
+            dest: 'public/js/libs/'
           }
         ]
       },

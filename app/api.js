@@ -107,15 +107,14 @@ module.exports = function( app ) {
   // Ajax hook for deleting a scrobble.
   app.post('/remove-track', user.restrict, function(req, res) {
 
-    var artist = req.body.artist;
-    var track = req.body.track;
-    var timestamp = req.body.timestamp;
-    console.log(artist, '-', track);
+    var artist = decodeURIComponent(req.body.artist);
+    var track = decodeURIComponent(req.body.track);
+    var timestamp = decodeURIComponent(req.body.timestamp);
+    console.log('remove-track', artist, '-', track);
 
     if ( _.isUndefined(artist) || _.isUndefined(track) || _.isUndefined(timestamp) ) {
       res.json(400, {
         ok: false,
-        err: err,
         message: 'Missing required parameters',
         generic: 'Oops, there was a problem.'
       });
@@ -135,6 +134,7 @@ module.exports = function( app ) {
       var resp = { ok: true };
       if ( err ) {
         resp.ok = false;
+        resp.message = result.message;
       }
 
       // Send json response.

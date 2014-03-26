@@ -117,6 +117,10 @@ define(function(require) {
 
 
   Utilities.requestArtistDuplicates = function( artist ) {
+    if (artist === undefined) {
+      throw new Error('Artist is not defined');
+    }
+
     var duplicates = Storage.getArtistDuplicates(artist);
     if ( duplicates !== null ) {
       var deferred = new $.Deferred();
@@ -143,9 +147,14 @@ define(function(require) {
 
     // Save to session storage.
     jqXHR.done(function(data) {
-      console.log('Saving %d duplictes for %s', Array.isArray(data.duplicates) ?
-          data.duplicates.length : -1, data.artist);
-      Storage.setArtistDuplicates( data.artist, data.duplicates );
+      var goodResponse = Array.isArray(data.duplicates);
+
+      if (goodResponse) {
+        console.log('Saving %d duplicates for %s', goodResponse ? data.duplicates.length : -1, data.artist);
+        Storage.setArtistDuplicates( data.artist, data.duplicates );
+      } else {
+        console.log('No duplicates given for %s', artist);
+      }
     });
 
     return jqXHR;
