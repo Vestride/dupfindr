@@ -47,35 +47,26 @@ function requiresSignature( method ) {
 
 
 exports.request = function(params, fn) {
-  var method;
-  var data;
+  var options = {
+    uri: common.BASE_URL
+  };
   var requestParams = exports.getCall( params );
 
   // Posting has to be done as a js object.
   if ( isWriteMethod( params.method ) ) {
-    method = 'post';
+    options.method = 'post';
+    options.form = requestParams;
 
-    data = {
-      uri: common.BASE_URL,
-      form: requestParams
-    };
-
-  // Create query string.
+  // Use query string.
   } else {
-    method = 'get';
-    var i = 0;
-    data = _.reduce(requestParams, function(memo, value, key) {
-      var glue = i === 0 ? '?' : '&';
-      i++;
-      return memo + glue + key + '=' + value;
-    }, common.BASE_URL);
+    options.method = 'get';
+    options.qs = requestParams;
   }
 
-  console.log(method.toUpperCase() + ':', data);
+  console.log(options.method.toUpperCase() + ':', options);
 
   function callback(err, response, body) {
     var resp = body && body.length > 100 ? body.substring(0, 100) + '| truncated' : body;
-
 
     if ( resp ) {
       console.log('last.fm response:', resp);
@@ -110,13 +101,18 @@ exports.request = function(params, fn) {
     fn(error, result);
   }
 
-  request[method](data, callback);
+  request(options, callback);
 };
 
 
 exports.getApiSignature = function(params) {
   // Break the reference.
-  params = _.clone(params);
+  // The parameters need to be encoded for the api signature...right?
+  params = _.clone( params );
+  // params = _.reduce(params, function( obj, value, key ) {
+  //   obj[encodeURI( key )] = encodeURI( value );
+  //   return obj;
+  // }, {});
 
   // Cannot have `format` nor `callback` in the parameters.
   if ( params.format ) {
@@ -144,18 +140,8 @@ exports.getApiSignature = function(params) {
 };
 
 
+// Don't encode parameters, request does that already. Been down that road :(
 exports.getCall = function( params ) {
-  // TODO: This fails with song names like Ænima, even though `request` should
-  // be url encoding the parameters... right? I can't figure out how to tell
-  // `request` not to and do it myself :( Maybe I'll have to ditch `request` for
-  // some http methods.
-  var isPost = isWriteMethod( params.method );
-  // Ensure each component is encoded correctly. Using the request node module,
-  // it seems the values should not be encoded here when it uses form data.
-  _.each(params, function(value, key, obj) {
-    obj[key] = isPost ? value : encodeURIComponent( value );
-  });
-
   params.api_key = common.API_KEY;
 
   if ( requiresSignature( params.method ) ) {
