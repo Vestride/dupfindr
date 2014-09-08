@@ -138,7 +138,7 @@ module.exports = function( app ) {
       }
 
       // Send json response.
-      res.json(lastfm.getHttpErrorCode(err), resp);
+      res.status(lastfm.getHttpErrorCode(err)).json(resp);
     });
   });
 

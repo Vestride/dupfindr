@@ -6,10 +6,7 @@ var common = require('./common');
 var crypto = require('crypto');
 var _ = require('underscore');
 var request = require('request');
-
-function md5(str) {
-  return crypto.createHash('md5').update(str).digest('hex');
-}
+var md5 = require('MD5');
 
 // https://github.com/jammus/lastfm-node/blob/master/lib/lastfm/lastfm-request.js
 var WRITE_METHODS = [
@@ -126,7 +123,7 @@ exports.getApiSignature = function(params) {
   var keys = Object.keys(params).sort();
 
   // Create concatenated string of <name><value>.
-  var paramsList = _.reduce(keys, function(memo, key) {
+  var paramsList = keys.reduce(function(memo, key) {
     return memo + key + params[ key ];
   }, '');
 
@@ -223,4 +220,3 @@ exports.getHttpErrorCode = function( errorCode ) {
 
   return httpCode;
 };
-

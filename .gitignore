@@ -4,3 +4,4 @@ bower_components
 /temp
 /public
 *.scssc
+.sass-cache
