@@ -12,13 +12,20 @@ module.exports = function(express, app) {
 
   app.use(express.static(common.directory + 'public'));
 
-  // Request body parsing middleware supporting JSON and urlencoded requests.
-  app.use(bodyParser());
+  // Parse application/x-www-form-urlencoded
+  app.use(bodyParser.urlencoded({ extended: true }))
+
+  // Parse application/json
+  app.use(bodyParser.json())
 
   app.use(cookieParser('scrobblescrewups'));
-  // Populates req.session
-  app.use(session());
 
+  // Populates req.session
+  app.use(session({
+    secret: 'scrobblywobbly',
+    resave: true,
+    saveUninitialized: true
+  }));
 
   // Give templates access to the API key.
   app.locals.API_KEY = common.API_KEY;
