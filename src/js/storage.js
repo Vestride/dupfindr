@@ -49,5 +49,9 @@ define(function() {
     window.sessionStorage.setItem('topartists', JSON.stringify( array ));
   };
 
+  Storage.clear = function() {
+    window.sessionStorage.clear();
+  };
+
   return Storage;
 });

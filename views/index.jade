@@ -18,6 +18,9 @@ block content
       input(type="text", name="artist", placeholder="Artist Name", required)
       input.pure-button.pure-button-primary(type="submit", value="Find Duplicates")
 
+  .pure-g
+    .pure-u-1
+      h2 Artists
   .pure-g.artist-cards#artist-cards
 
   .pure-g.load-more.hidden#top-artists-load-more
@@ -31,6 +34,11 @@ block content
     .pure-u-1.ghost-center-wrap.text-center.top-artists__loader
       .ghost-center
         +loaderMessage('Loading top artists...')
+
+  .pure-g
+    .pure-u-1
+      p You can clear the cached data and request all new data from Last.fm.
+      button.pure-button.btn-error.js-clear-all Clear
 
 block require
   +requireScript('pages/home')

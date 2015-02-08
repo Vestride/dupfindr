@@ -48,6 +48,15 @@ define(function(require) {
       e.preventDefault();
       window.alert(e.currentTarget.getAttribute('title'));
     });
+
+    $('.js-clear-all').on('click', function() {
+      Storage.clear();
+      $('#artist-cards').empty();
+      $('#top-artists-loader').removeClass(Utilities.ClassName.HIDDEN);
+      $('#top-artists-load-more').addClass(Utilities.ClassName.HIDDEN);
+      this.topArtistPage = 0;
+      this.getTopArtists(0);
+    }.bind(this));
   };
 
 
