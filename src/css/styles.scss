@@ -3,7 +3,6 @@
 *,
 ::before,
 ::after {
-  -moz-box-sizing: border-box;
   box-sizing: border-box;
 }
 
@@ -37,24 +36,6 @@
   -webkit-appearance: none;
   border-radius: 2px;
 }
-
-// a.pure-button {
-
-//   &,
-//   &:visited {
-//     color: #444;
-//     color: rgba(0,0,0,.8);
-//   }
-
-//   &:hover {
-//     text-decoration: none;
-//   }
-
-//   &:active {
-//     color: #444;
-//     color: rgba(0,0,0,.8);
-//   }
-// }
 
 .btn-success,
 .btn-error,

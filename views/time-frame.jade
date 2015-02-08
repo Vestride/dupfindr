@@ -1,0 +1,17 @@
+extends layout
+
+
+block content
+  .list-loading-msg(data-artist=locals.artist)
+    .pure-g
+      .pure-u-1
+        h2.t2 Time Frame
+        p.marginless Search for duplicates based on a time frame.
+        // getWeeklyChartList - find the range in which the time frame fits (between a "from" and "to")
+        // getWeeklyTrackChart - for each week in the time frame
+        // Filter array to unique artists
+        // Request artist duplicates for the given time frame
+
+
+block require
+  +requireScript('pages/time-frame')

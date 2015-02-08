@@ -79,7 +79,7 @@ module.exports = function( app ) {
     lastfm.request(params, function(err, result) {
 
       if ( err || !(result && result.artisttracks && result.artisttracks.track) ) {
-        res.json(lastfm.getHttpErrorCode(err), {
+        res.status(lastfm.getHttpErrorCode(err)).json({
           ok: false,
           err: err,
           message: result.message,

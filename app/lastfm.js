@@ -106,10 +106,6 @@ exports.getApiSignature = function(params) {
   // Break the reference.
   // The parameters need to be encoded for the api signature...right?
   params = _.clone( params );
-  // params = _.reduce(params, function( obj, value, key ) {
-  //   obj[encodeURI( key )] = encodeURI( value );
-  //   return obj;
-  // }, {});
 
   // Cannot have `format` nor `callback` in the parameters.
   if ( params.format ) {
@@ -144,8 +140,6 @@ exports.getCall = function( params ) {
   if ( requiresSignature( params.method ) ) {
     params.api_sig = exports.getApiSignature( params );
   }
-
-  // TODO: session key here or in the request?
 
   params.format = 'json';
 

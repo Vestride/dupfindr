@@ -42,6 +42,11 @@ module.exports = function( app ) {
   });
 
 
+  app.get('/time-frame', user.restrict, function(req, res) {
+    res.render('time-frame');
+  });
+
+
   app.get('/recommended-artists', user.restrict, function(req, res) {
 
     var params = {
@@ -59,4 +64,3 @@ module.exports = function( app ) {
     });
   });
 };
-

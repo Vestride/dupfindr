@@ -3,7 +3,6 @@ define(function(require) {
   var $ = require('jquery');
   var Utilities = require('utilities');
   var TrackRemover = require('trackremover');
-  var runtime = require('jaderuntime');
   var tableTemplate = require('templates/track-remover-table');
 
   var $loadingMsg = $('.list-loading-msg');

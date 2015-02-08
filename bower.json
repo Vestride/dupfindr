@@ -25,6 +25,7 @@
   ],
   "dependencies": {
     "requirejs": "~2.1.11",
-    "underscore": "~1.6.0"
+    "underscore": "~1.6.0",
+    "es6-promise": "~2.0.1"
   }
 }
