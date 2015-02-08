@@ -80,50 +80,7 @@
   padding-bottom: 40px;
 }
 
-.artist-card {
-  display: block;
-  background: $gray80;
-  text-decoration: none;
-  color: $wetAsphalt;
-}
-
-
-
-.artist-card__img img {
-  width: 100%;
-}
-
-.artist-card__playcount {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  padding: 4px;
-  color: white;
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
-.artist-card__duplicates {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  padding: 4px;
-  color: white;
-  background-color: rgba($alizarin, 0.5);
-  text-align: center;
-  min-width: 20px;
-
-  &.no-duplicates {
-    background-color: rgba($emerald, 0.5)
-  }
-}
-
-.artist-card__inner {
-  padding: 15px 10px;
-}
-
-.artist-cards {
-}
-
+@import "artist-card";
 
 .top-artists__loader {
   height: 400px;

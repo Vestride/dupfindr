@@ -21,16 +21,17 @@ define(function() {
   Storage.getTopArtists = function(page) {
     var top = window.sessionStorage.getItem('topartists');
     if ( top === null ) {
-      return top;
+      return null;
     }
 
     top = JSON.parse( top );
 
     if ( $.isNumeric( page ) ) {
       top = top.splice(page * 12, 12);
-      if ( top.length === 0 ) {
-        top = null;
-      }
+    }
+
+    if ( top.length === 0 ) {
+      top = null;
     }
 
     return top;

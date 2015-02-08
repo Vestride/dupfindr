@@ -4,8 +4,9 @@ each artist in locals
         data-artist=artist.name, data-plays=artist.playcount)
       div.artist-card__img.keep-ratio.HD
         div.keep-ratio-inner
-          img(src=artist.image[4]['#text'], alt=artist.name)
+          img.artist-card__image(src=artist.image[4]['#text'], alt=artist.name)
           p.artist-card__playcount.marginless !{ artist.playcount + ' plays'}
           p.artist-card__duplicates.marginless.hidden !{ ' duplicates' }
+          img.artist-card__loading(src='/icons/puff.svg')
       div.artist-card__inner
         p.artist-card__name.marginless.text-overflow= artist.name

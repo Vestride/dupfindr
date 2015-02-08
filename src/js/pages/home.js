@@ -1,4 +1,3 @@
-
 define(function(require) {
   var $ = require('jquery');
   var Utilities = require('utilities');
@@ -25,7 +24,7 @@ define(function(require) {
 
   ArtistLoader.prototype.listen = function() {
     $('.js-load-more').on('click', function(evt) {
-      if ( this.isLoadingArtists ) {
+      if (this.isLoadingArtists) {
         return;
       }
 
@@ -33,16 +32,16 @@ define(function(require) {
 
       this.topArtistPage++;
 
-      Utilities.disableButton( buttonEl );
+      Utilities.disableButton(buttonEl);
       this.getTopArtists(function() {
-        Utilities.enableButton( buttonEl );
+        Utilities.enableButton(buttonEl);
       });
     }.bind(this));
   };
 
 
   ArtistLoader.prototype.getTopArtists = function(cb) {
-    var wait = Utilities.requestTopArtists( this.topArtistPage );
+    var wait = Utilities.requestTopArtists(this.topArtistPage);
 
     this.isLoadingArtists = true;
 
@@ -51,12 +50,12 @@ define(function(require) {
       this.populateArtists(data.artists);
       this.preloadDuplicates(data.artists);
 
-    // Failure
+      // Failure
     }.bind(this)).fail(function(jqXHR, status, statusText) {
-      var data = jqXHR.responseJSON || JSON.parse( jqXHR.responseText || '""' );
+      var data = jqXHR.responseJSON || JSON.parse(jqXHR.responseText || '""');
       console.log('getting top artists failed - ' + statusText + ' - ' + data.message);
 
-    // Always
+      // Always
     }).always(function() {
       this.isLoadingArtists = false;
       if (cb) {
@@ -65,55 +64,66 @@ define(function(require) {
     }.bind(this));
   };
 
-  ArtistLoader.prototype.populateArtists = function( data ) {
+  ArtistLoader.prototype.populateArtists = function(data) {
     console.log('populate artists with:', data);
-    var html = artistCardTemplate( data );
-    $('#artist-cards').append( html );
-    $('#top-artists-loader').addClass( Utilities.ClassName.HIDDEN );
-    $('#top-artists-load-more').removeClass( Utilities.ClassName.HIDDEN );
+    var html = artistCardTemplate(data);
+    $('#artist-cards').append(html);
+    $('#top-artists-loader').addClass(Utilities.ClassName.HIDDEN);
+    $('#top-artists-load-more').removeClass(Utilities.ClassName.HIDDEN);
   };
 
 
-  ArtistLoader.prototype.preloadDuplicates = function( data ) {
+  ArtistLoader.prototype.preloadDuplicates = function(data) {
     data.forEach(function(artist, i) {
-      var delay = Storage.getArtistDuplicates( artist.name ) === null ?
-          175 * i : 0;
+
+      // If the data needs to be requested, throttle the requests to Last.fm.
+      var delay = Storage.getArtistDuplicates(artist.name) === null ?
+        175 * i : 0;
+
+      // Show request is pending.
+      this.getArtistCard(artist.name).addClass('artist-card--loading');
+
       setTimeout(function() {
-        this.getArtistDuplicates( artist.name );
+        this.getArtistDuplicates(artist.name);
       }.bind(this), delay);
     }, this);
   };
 
 
   ArtistLoader.prototype.displayDuplicatesForArtist = function(artist, duplicates) {
-    if ( !duplicates ) {
+    if (!duplicates) {
       return;
     }
 
-    var $card = $('.artist-card[data-artist="' + artist + '"]');
+    var $card = this.getArtistCard(artist);
+    $card.removeClass('artist-card--loading');
     var $dups = $card.find('.artist-card__duplicates');
     var textSuffix = duplicates.length === 1 ?
-        Strings.DUPLICATE :
-        Strings.DUPLICATES;
+      Strings.DUPLICATE :
+      Strings.DUPLICATES;
 
-    $dups.removeClass( Utilities.ClassName.HIDDEN );
-    if ( duplicates.length === 0 ) {
+    $dups.removeClass(Utilities.ClassName.HIDDEN);
+    if (duplicates.length === 0) {
       $dups.addClass('no-duplicates');
     }
-    $dups.text( duplicates.length + ' ' + textSuffix );
+    $dups.text(duplicates.length + ' ' + textSuffix);
     $card.attr('data-duplicates', duplicates.length);
   };
 
 
-  ArtistLoader.prototype.getArtistDuplicates = function( artist ) {
-    var wait = Utilities.requestArtistDuplicates( artist );
+  ArtistLoader.prototype.getArtistDuplicates = function(artist) {
+    var wait = Utilities.requestArtistDuplicates(artist);
 
     wait.done(function(data) {
-      this.displayDuplicatesForArtist( artist, data.duplicates );
+      this.displayDuplicatesForArtist(artist, data.duplicates);
     }.bind(this)).fail(function(jqXHR, status, statusText) {
-      var data = jqXHR.responseJSON || JSON.parse( jqXHR.responseText || '""' );
+      var data = jqXHR.responseJSON || JSON.parse(jqXHR.responseText || '""');
       console.log('getting ' + artist + ' failed - ' + statusText + ' - ' + data.message);
     });
+  };
+
+  ArtistLoader.prototype.getArtistCard = function(artist) {
+    return $('.artist-card[data-artist="' + artist + '"]');
   };
 
 
