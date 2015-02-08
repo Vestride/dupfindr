@@ -11,27 +11,28 @@ function updateSession(session, user) {
 
 
 function restrict(req, res, next) {
-  console.log('---restrict---');
-  console.log('Cookies:');
-  common.log(req.cookies);
+  common.log('---restrict---');
+  common.log('Cookies:', req.signedCookies);
 
   // Session key available. The user has authorized our app.
-  if ( req.session.sk ) {
-    console.log('session key available on session object');
+  if (req.session.sk) {
+    common.log('session key available on session object');
     next();
 
   // New session, but they've authenticated before.
-  } else if ( req.cookies.username ) {
-    console.log('new session, but they have authenticated before');
+  } else if (req.signedCookies.username) {
+    common.log('new session, but they have authenticated before');
     var collection = db.collection('users');
 
-    collection.findOne({ username: req.cookies.username }, function(err, user) {
+    collection.findOne({
+      username: req.signedCookies.username
+    }, function(err, user) {
       if (err) {
-        console.log('error getting ' + req.cookies.username);
-        console.log(err);
+        common.log('error getting ' + req.signedCookies.username);
+        common.log(err);
       }
 
-      console.log('Got ' + user.username + ' from database. Setting session variabes');
+      common.log('Got ' + user.username + ' from database. Setting session variabes');
       updateSession(req.session, user);
 
       next();
@@ -40,8 +41,8 @@ function restrict(req, res, next) {
 
   // The token is available after the user authorizes the app,
   // but the session isn't available yet.
-  } else if ( req.session.token ) {
-    // console.log('session has token, get the session key from lastfm');
+  } else if (req.session.token) {
+    // common.log('session has token, get the session key from lastfm');
 
     // Make the request to Last.fm for the session.
     lastfm.request({
@@ -50,7 +51,7 @@ function restrict(req, res, next) {
     }, function(err, result) {
 
       // Make sure last.fm didn't return an error
-      if ( err ) {
+      if (err) {
         res.render('error', result);
 
       } else {
@@ -63,16 +64,25 @@ function restrict(req, res, next) {
         // Save username in a cookie so the app can check if the user already has a
         // session key stored. That's probably not safe...
         var thirtyDays = 30 * 24 * 60 * 60 * 1000;
-        res.cookie('username', doc.username, { maxAge: thirtyDays, httpOnly: false });
+        res.cookie('username', doc.username, {
+          maxAge: thirtyDays,
+          signed: true,
+          httpOnly: true
+        });
 
         // Ugh, I have no idea what i'm doing...
         updateSession(req.session, doc);
 
         // Insert new user if one doesn't already exist.
-        collection.update({username: doc.username}, doc, {upsert: true, w:1}, function(err/*, result*/) {
+        collection.update({
+          username: doc.username
+        }, doc, {
+          upsert: true,
+          w: 1
+        }, function(err /*, result*/ ) {
           if (err) {
-            console.log('error updating recored for:', doc);
-            console.log(err);
+            common.log('error updating recored for:', doc);
+            common.log(err);
           }
         });
 
@@ -82,7 +92,7 @@ function restrict(req, res, next) {
 
   // User needs to authenticate the app.
   } else {
-    console.log('User needs to authenticate the app');
+    common.log('User needs to authenticate the app');
     // req.session.error = 'Access denied!';
     res.redirect('/needs-authentication');
   }

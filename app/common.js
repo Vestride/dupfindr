@@ -7,8 +7,11 @@ exports.SECRET = '818feb0f4cd9d9feb6edb36d8861694c';
 exports.BASE_URL = 'http://ws.audioscrobbler.com/2.0/';
 
 // Deep logs.
-exports.log = function(object) {
-  console.log(util.inspect(object, false, null));
+exports.log = function() {
+  var args = [].slice.call(arguments).map(function(object) {
+    return util.inspect(object, false, null);
+  });
+  console.log.apply(console, args);
 };
 
 exports.directory = path.join(__dirname, '../');
