@@ -92,6 +92,7 @@ module.exports = function( app ) {
       var duplicates = helpers.getDuplicates(tracks);
       helpers.augmentTrackData(duplicates, username);
 
+      // TODO(glen) check tracks.length against the total in top artists.
       console.log('Total tracks by ' + artist + ' = ' + tracks.length);
       console.log('duplicates: ' + duplicates.length);
 

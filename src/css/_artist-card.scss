@@ -1,8 +1,26 @@
+.artist-cards {
+  padding-bottom: 40px;
+
+}
+
+.artist-cards .error-message {
+  font-size: 20px;
+}
+
 .artist-card {
+  position: relative;
   display: block;
   background: $gray80;
   text-decoration: none;
   color: $wetAsphalt;
+
+  &:hover {
+    z-index: 2;
+  }
+
+  &:hover .aspect {
+    overflow: visible;
+  }
 }
 
 .artist-card__image {
@@ -54,4 +72,15 @@
 
 .artist-card--loading .artist-card__loading {
   display: block;
+}
+
+.artist-card__error {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  padding: 3px 6px;
+
+  .fa {
+    color: white;
+  }
 }

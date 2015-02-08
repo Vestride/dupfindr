@@ -1,4 +1,3 @@
-
 define(function(require) {
   var Settings = require('settings');
   var Storage = require('storage');
@@ -21,10 +20,10 @@ define(function(require) {
   };
 
 
-  Utilities.onTransitionEnd = function( elem, fn, context ) {
+  Utilities.onTransitionEnd = function(elem, fn, context) {
     // TODO(glen): Add ability to listen for only a specific property which
     // transitioned and ignore others.
-    if ( elem.jquery ) {
+    if (elem.jquery) {
       elem = elem[0];
     }
 
@@ -70,7 +69,7 @@ define(function(require) {
   };
 
 
-  Utilities.inherits = function( child, parent ) {
+  Utilities.inherits = function(child, parent) {
     child.prototype = Object.create(parent.prototype);
     child.prototype.constructor = child;
 
@@ -116,13 +115,13 @@ define(function(require) {
   };
 
 
-  Utilities.requestArtistDuplicates = function( artist ) {
+  Utilities.requestArtistDuplicates = function(artist) {
     if (artist === undefined) {
       throw new Error('Artist is not defined');
     }
 
     var duplicates = Storage.getArtistDuplicates(artist);
-    if ( duplicates !== null ) {
+    if (duplicates !== null) {
       var deferred = new $.Deferred();
 
       // The request is expected to be async.
@@ -151,7 +150,7 @@ define(function(require) {
 
       if (goodResponse) {
         console.log('Saving %d duplicates for %s', goodResponse ? data.duplicates.length : -1, data.artist);
-        Storage.setArtistDuplicates( data.artist, data.duplicates );
+        Storage.setArtistDuplicates(data.artist, data.duplicates);
       } else {
         console.log('No duplicates given for %s', artist);
       }
@@ -160,40 +159,39 @@ define(function(require) {
     return jqXHR;
   };
 
+  Utilities.status = function(response) {
+    if (response.status >= 200 && response.status < 300) {
+      return Promise.resolve(response.json());
+    } else {
+      return Promise.reject(response.json());
+    }
+  };
 
-  Utilities.requestTopArtists = function( page ) {
-    page = page || 0;
-    var top = Storage.getTopArtists( page );
-    if ( top !== null ) {
-      var promise = new $.Deferred();
+  Utilities.requestTopArtists = function(page) {
+    var top = Storage.getTopArtists(page);
 
-      // The request is expected to be async.
-      setTimeout(function() {
-        promise.resolveWith(null, [{
-          artists: top
-        }]);
-      }, 100);
-      return promise.promise();
+    if (top !== null) {
+      return new Promise(function(resolve) {
+        // The request is expected to be async.
+        setTimeout(function() {
+          resolve(top);
+        }, 100);
+      });
     }
 
-    var jqXHR = $.ajax({
-      url: '/top-artists',
-      type: 'get',
-      data: {
-        page: page + 1 // last.fm's api isn't zero-based here...
-      },
-      dataType: 'json'
-    });
-
-    jqXHR.done(function( data ) {
-      Storage.setTopArtists(data.artists);
-    });
-
-    return jqXHR;
+    // last.fm's api isn't zero-based here...
+    var qs = '?page=' + (page + 1);
+    return fetch('/top-artists' + qs)
+      .then(Utilities.status)
+      .then(function(json) {
+        var artists = json.artists;
+        Storage.setTopArtists(artists);
+        return artists;
+      });
   };
 
 
-  Utilities.enableButton = function( buttonEl ) {
+  Utilities.enableButton = function(buttonEl) {
     buttonEl.dataset.isLoading = false;
     buttonEl.children[0].style.display = '';
     buttonEl.children[1].textContent = buttonEl.dataset.restingText;
@@ -201,7 +199,7 @@ define(function(require) {
   };
 
 
-  Utilities.disableButton = function( buttonEl ) {
+  Utilities.disableButton = function(buttonEl) {
     var currentText = buttonEl.children[1].textContent;
 
     // Write on the next frame.

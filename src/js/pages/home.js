@@ -3,6 +3,7 @@ define(function(require) {
   var Utilities = require('utilities');
   var Storage = require('storage');
   var artistCardTemplate = require('templates/artist-card');
+  var topArtistErrorTemplate = require('templates/top-artists-error');
 
   var Strings = {
     DUPLICATES: 'duplicates',
@@ -10,14 +11,19 @@ define(function(require) {
   };
 
   var ArtistLoader = function() {
-    this.topArtistPage = 0;
     this.isLoadingArtists = false;
     this.init();
   };
 
 
   ArtistLoader.prototype.init = function() {
-    this.getTopArtists();
+    var numStoredArtists = Storage.getTopArtists();
+    if (numStoredArtists === null) {
+      this.topArtistPage = 0;
+    } else {
+      this.topArtistPage = numStoredArtists.length / 12;
+    }
+    this.getTopArtists(null);
     this.listen();
   };
 
@@ -33,30 +39,34 @@ define(function(require) {
       this.topArtistPage++;
 
       Utilities.disableButton(buttonEl);
-      this.getTopArtists(function() {
+      this.getTopArtists(this.topArtistPage, function() {
         Utilities.enableButton(buttonEl);
       });
     }.bind(this));
+
+    $('#artist-cards').on('click', '.artist-card__error', function(e) {
+      e.preventDefault();
+      window.alert(e.currentTarget.getAttribute('title'));
+    });
   };
 
 
-  ArtistLoader.prototype.getTopArtists = function(cb) {
-    var wait = Utilities.requestTopArtists(this.topArtistPage);
+  ArtistLoader.prototype.getTopArtists = function(page, cb) {
+    var request = Utilities.requestTopArtists(page);
 
     this.isLoadingArtists = true;
 
     // Success
-    wait.done(function(data) {
-      this.populateArtists(data.artists);
-      this.preloadDuplicates(data.artists);
+    request.then(function(artists) {
+      this.populateArtists(artists);
+      this.preloadDuplicates(artists);
 
       // Failure
-    }.bind(this)).fail(function(jqXHR, status, statusText) {
-      var data = jqXHR.responseJSON || JSON.parse(jqXHR.responseText || '""');
-      console.log('getting top artists failed - ' + statusText + ' - ' + data.message);
+    }.bind(this)).catch(function(err) {
+      this.showTopArtistsFailure(err.message || err.generic);
 
       // Always
-    }).always(function() {
+    }.bind(this)).then(function() {
       this.isLoadingArtists = false;
       if (cb) {
         cb.call(this);
@@ -64,12 +74,25 @@ define(function(require) {
     }.bind(this));
   };
 
+  /**
+   * Get the template string and append it to the artists container.
+   * @param {Array.<Object>} data An array of artist objects.
+   */
   ArtistLoader.prototype.populateArtists = function(data) {
-    console.log('populate artists with:', data);
-    var html = artistCardTemplate(data);
-    $('#artist-cards').append(html);
+    $('#artist-cards').append(artistCardTemplate(data));
     $('#top-artists-loader').addClass(Utilities.ClassName.HIDDEN);
     $('#top-artists-load-more').removeClass(Utilities.ClassName.HIDDEN);
+  };
+
+  /**
+   * Show the user something went wrong.
+   * @param {string} message An error message.
+   */
+  ArtistLoader.prototype.showTopArtistsFailure = function(message) {
+    $('#artist-cards').prepend(topArtistErrorTemplate({
+      message: message
+    }));
+    $('#top-artists-loader').addClass(Utilities.ClassName.HIDDEN);
   };
 
 
@@ -90,6 +113,11 @@ define(function(require) {
   };
 
 
+  /**
+   * Update the artist card template with new data for the number of duplicates.
+   * @param {string} artist Artist name.
+   * @param {Array} duplicates Array of dups.
+   */
   ArtistLoader.prototype.displayDuplicatesForArtist = function(artist, duplicates) {
     if (!duplicates) {
       return;
@@ -109,6 +137,12 @@ define(function(require) {
     $card.attr('data-duplicates', duplicates.length);
   };
 
+  ArtistLoader.prototype.displayArtistLoadFailure = function(artist, obj) {
+    var message = obj.message || obj.generic;
+    var $card = this.getArtistCard(artist);
+    $card.find('.artist-card__error').attr('title', message).removeClass(Utilities.ClassName.HIDDEN);
+  };
+
 
   ArtistLoader.prototype.getArtistDuplicates = function(artist) {
     var wait = Utilities.requestArtistDuplicates(artist);
@@ -117,12 +151,18 @@ define(function(require) {
       this.displayDuplicatesForArtist(artist, data.duplicates);
     }.bind(this)).fail(function(jqXHR, status, statusText) {
       var data = jqXHR.responseJSON || JSON.parse(jqXHR.responseText || '""');
-      console.log('getting ' + artist + ' failed - ' + statusText + ' - ' + data.message);
-    }).always(function() {
+      console.error('getting ' + artist + ' failed - ' + statusText + ' - ' + data.message);
+      this.displayArtistLoadFailure(artist, data);
+    }.bind(this)).always(function() {
       this.getArtistCard(artist).removeClass('artist-card--loading');
     }.bind(this));
   };
 
+  /**
+   * Retrieve the artist card element.
+   * @param {string} artist Name of the artist.
+   * @return {jQuery}
+   */
   ArtistLoader.prototype.getArtistCard = function(artist) {
     return $('.artist-card[data-artist="' + artist + '"]');
   };

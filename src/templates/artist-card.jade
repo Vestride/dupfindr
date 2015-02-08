@@ -8,5 +8,7 @@ each artist in locals
           img.artist-card__loading(src='/icons/puff.svg')
           p.artist-card__playcount.marginless.text-overflow !{ artist.playcount + ' plays'}
           p.artist-card__duplicates.marginless.hidden !{ ' duplicates' }
+          button.artist-card__error.pure-button.btn-warning.hidden
+            i.fa.fa-exclamation-triangle
       div.artist-card__inner
         p.artist-card__name.marginless.text-overflow= artist.name

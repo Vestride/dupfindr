@@ -26,6 +26,8 @@
   "globals": {
     "requestAnimationFrame": true,
     "cancelAnimationFrame": true,
+    "fetch": false,
+    "Promise": false,
     "log": true,
     "define": true,
     "require": true,

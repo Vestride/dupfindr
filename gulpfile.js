@@ -22,7 +22,8 @@ gulp.task('copy-bower', function() {
   return gulp.src([
       'bower_components/requirejs/require.js',
       'bower_components/underscore/underscore.js',
-      'bower_components/es6-promise/promise.js'
+      'bower_components/es6-promise/promise.js',
+      'bower_components/fetch/fetch.js'
     ])
     .pipe(gulp.dest('public/js/libs/'));
 });

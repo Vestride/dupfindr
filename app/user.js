@@ -11,28 +11,28 @@ function updateSession(session, user) {
 
 
 function restrict(req, res, next) {
-  common.log('---restrict---');
-  common.log('Cookies:', req.signedCookies);
+  console.log('---restrict---');
+  console.log('Cookies:', req.signedCookies);
 
   // Session key available. The user has authorized our app.
   if (req.session.sk) {
-    common.log('session key available on session object');
+    console.log('session key available on session object');
     next();
 
   // New session, but they've authenticated before.
   } else if (req.signedCookies.username) {
-    common.log('new session, but they have authenticated before');
+    console.log('new session, but they have authenticated before');
     var collection = db.collection('users');
 
     collection.findOne({
       username: req.signedCookies.username
     }, function(err, user) {
       if (err) {
-        common.log('error getting ' + req.signedCookies.username);
-        common.log(err);
+        console.log('error getting ' + req.signedCookies.username);
+        console.log(err);
       }
 
-      common.log('Got ' + user.username + ' from database. Setting session variabes');
+      console.log('Got ' + user.username + ' from database. Setting session variabes');
       updateSession(req.session, user);
 
       next();
@@ -42,7 +42,7 @@ function restrict(req, res, next) {
   // The token is available after the user authorizes the app,
   // but the session isn't available yet.
   } else if (req.session.token) {
-    // common.log('session has token, get the session key from lastfm');
+    // console.log('session has token, get the session key from lastfm');
 
     // Make the request to Last.fm for the session.
     lastfm.request({
@@ -81,8 +81,8 @@ function restrict(req, res, next) {
           w: 1
         }, function(err /*, result*/ ) {
           if (err) {
-            common.log('error updating recored for:', doc);
-            common.log(err);
+            console.log('error updating recored for:', doc);
+            console.log(err);
           }
         });
 
@@ -92,7 +92,7 @@ function restrict(req, res, next) {
 
   // User needs to authenticate the app.
   } else {
-    common.log('User needs to authenticate the app');
+    console.log('User needs to authenticate the app');
     // req.session.error = 'Access denied!';
     res.redirect('/needs-authentication');
   }

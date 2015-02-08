@@ -63,8 +63,11 @@ exports.request = function(params, fn) {
 
   function callback(err, response, body) {
     if ( body ) {
-      var resp = body.length > 100 ? body.substring(0, 100) + '| truncated' : body;
-      console.log('last.fm response:', resp);
+      var resp = body.length > 140 ? body.substring(0, 140).replace(/\n/g, '') + '...' : body;
+      var copy = params.artist ?
+        'last.fm response for [' + params.artist + ']' :
+        'last.fm response:';
+      console.log(copy, resp);
     } else {
       console.log('no last.fm response');
     }
@@ -86,16 +89,21 @@ exports.request = function(params, fn) {
 
       // Last.fm sometimes returns xml even when format=json, and incomplete xml at that!
       if ( /<\?xml/.test(body) ) {
-        result.message = 'Last.fm replied with XML even though we requested JSON';
-        console.error(result.message);
+        result.error = 'received_xml';
       } else {
-        console.error('Unable to parse last.fm\'s response.');
+        result.error = 'bad_json';
       }
     }
 
-    var error = result.error ? result.error : null;
+    if (result.error) {
+      result.message = exports.getErrorMessage(result.error);
+      console.error(result.message);
+      fn(result.error, result);
 
-    fn(error, result);
+    } else {
+      fn(null, result);
+    }
+
   }
 
   request(options, callback);
@@ -174,37 +182,56 @@ exports.Errors = {
   '25' : 'Radio Not Found - Radio station not found',
   '26' : 'API Key Suspended - This application is not allowed to make requests to the web services',
   '27' : 'Deprecated - This type of request is no longer supported',
-  '29' : 'Rate Limit Exceded - Your IP has made too many requests in a short period, exceeding our API guidelines'
+  '29' : 'Rate Limit Exceded - Your IP has made too many requests in a short period, exceeding our API guidelines',
+
+  'received_xml': 'Last.fm replied with XML even though we requested JSON',
+  'bad_json': 'Unable to parse last.fm\'s response.'
 };
 
+exports.getErrorMessage = function(key) {
+  return exports.Errors[key] || '¯\_(ツ)_/¯';
+};
 
 exports.getHttpErrorCode = function( errorCode ) {
   if ( _.isUndefined(errorCode) || _.isNull(errorCode) ) {
     return 200;
   }
 
-  errorCode = parseInt( errorCode, 10 );
   var httpCode;
 
   // TODO(glen): Add more as I figure out which code is whose fault.
   switch (errorCode) {
     // Bad Request
-    case 5:
-    case 13:
+    case '5':
+    case '13':
       httpCode = 400;
       break;
 
-    case 404:
+    // Unauthorized.
+    case '401':
+      httpCode = 401;
+      break;
+
+    // Not found.
+    case '404':
       httpCode = 404;
       break;
 
-    case 500:
+    // Request timeout.
+    case '408':
+      httpCode = 408;
+      break;
+
+    // Internal server error.
+    case '500':
       httpCode = 500;
       break;
 
     // Service unavailable.
-    case 8:
-    case 503:
+    case '8':
+    case 'received_xml':
+    case 'bad_json':
+    case '503':
       httpCode = 503;
       break;
 
