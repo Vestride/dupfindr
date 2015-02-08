@@ -51,7 +51,7 @@
 }
 
 // 1:1 ratio
-.keep-ratio {
+.aspect {
   position: relative;
   width: 100%;
   height: 0;
@@ -60,17 +60,17 @@
 }
 
 // 4:3 ratio
-.keep-ratio.four-three {
+.aspect--4x3 {
   padding-bottom: 75%;
 }
 
 // 16:9 ratio
-.keep-ratio.HD {
+.aspect--16x9 {
   padding-bottom: 56.25%;
 }
 
 // Assuming the child of the element whos ratio is being kept needs a height, use this
-.keep-ratio-inner,
+.aspect-inner,
 .fill-parent {
   @include fill-parent();
 }

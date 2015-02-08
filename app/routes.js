@@ -37,7 +37,8 @@ module.exports = function( app ) {
 
     res.render('duplicates', {
       user: username,
-      artist: artist
+      artist: artist,
+      title: 'Duplicates for ' + artist
     });
   });
 

@@ -41,7 +41,7 @@ function restrict(req, res, next) {
   // The token is available after the user authorizes the app,
   // but the session isn't available yet.
   } else if ( req.session.token ) {
-    console.log('session has token, get the session key from lastfm');
+    // console.log('session has token, get the session key from lastfm');
 
     // Make the request to Last.fm for the session.
     lastfm.request({

@@ -13,6 +13,16 @@
   margin-right: auto;
 }
 
+// Ugh, pure you suck!
+html,
+button,
+input,
+select,
+textarea,
+.pure-g [class *= "pure-u"] {
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 1em;
+}
 
 @import "type";
 

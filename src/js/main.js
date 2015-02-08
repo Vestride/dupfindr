@@ -21,4 +21,6 @@ require(['promise'], function(Promise) {
   Promise.polyfill();
 });
 
-
+if (document.documentElement.style.objectFit !== undefined) {
+  document.documentElement.classList.add('objectfit');
+}

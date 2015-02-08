@@ -96,7 +96,6 @@ define(function(require) {
     }
 
     var $card = this.getArtistCard(artist);
-    $card.removeClass('artist-card--loading');
     var $dups = $card.find('.artist-card__duplicates');
     var textSuffix = duplicates.length === 1 ?
       Strings.DUPLICATE :
@@ -119,7 +118,9 @@ define(function(require) {
     }.bind(this)).fail(function(jqXHR, status, statusText) {
       var data = jqXHR.responseJSON || JSON.parse(jqXHR.responseText || '""');
       console.log('getting ' + artist + ' failed - ' + statusText + ' - ' + data.message);
-    });
+    }).always(function() {
+      this.getArtistCard(artist).removeClass('artist-card--loading');
+    }.bind(this));
   };
 
   ArtistLoader.prototype.getArtistCard = function(artist) {

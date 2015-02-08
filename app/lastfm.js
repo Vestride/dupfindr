@@ -3,7 +3,6 @@
  */
 
 var common = require('./common');
-var crypto = require('crypto');
 var _ = require('underscore');
 var request = require('request');
 var md5 = require('MD5');
@@ -60,12 +59,11 @@ exports.request = function(params, fn) {
     options.qs = requestParams;
   }
 
-  console.log(options.method.toUpperCase() + ':', options);
+  // console.log(options.method.toUpperCase() + ':', options);
 
   function callback(err, response, body) {
-    var resp = body && body.length > 100 ? body.substring(0, 100) + '| truncated' : body;
-
-    if ( resp ) {
+    if ( body ) {
+      var resp = body.length > 100 ? body.substring(0, 100) + '| truncated' : body;
       console.log('last.fm response:', resp);
     } else {
       console.log('no last.fm response');
@@ -82,15 +80,17 @@ exports.request = function(params, fn) {
     } catch(e) {
       // See if there was a response code from last.fm (like 500 or 503)
       if ( response && response.responseCode ) {
-        console.log(response.responseCode);
+        console.error(response.responseCode);
         result.error = response.responseCode;
       }
 
       // Last.fm sometimes returns xml even when format=json, and incomplete xml at that!
       if ( /<\?xml/.test(body) ) {
         result.message = 'Last.fm replied with XML even though we requested JSON';
+        console.error(result.message);
+      } else {
+        console.error('Unable to parse last.fm\'s response.');
       }
-      console.log('Unable to parse last.fm\'s response.');
     }
 
     var error = result.error ? result.error : null;

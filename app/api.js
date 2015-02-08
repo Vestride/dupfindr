@@ -23,7 +23,7 @@ module.exports = function( app ) {
     // fs.readFile('./test/topartists.json', function (err, data) {
     //   var result = JSON.parse(data);
       if ( err ) {
-        res.json(lastfm.getHttpErrorCode(err), {
+        res.status(lastfm.getHttpErrorCode(err)).json({
           ok: false,
           err: err,
           message: result.message,
@@ -52,7 +52,7 @@ module.exports = function( app ) {
     console.log('get:', artist);
 
     if ( !artist || artist === 'null' || artist === 'undefined' ) {
-      res.json(400, {
+      res.status(400).json({
         ok: false,
         message: 'No artist given',
         generic: 'Oops, there was a problem.'
@@ -65,7 +65,7 @@ module.exports = function( app ) {
       user: username,
       method: 'user.getartisttracks',
       artist: artist,
-      limit: 250,
+      limit: 50000,
       // page: 2
     };
 
