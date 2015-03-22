@@ -117,71 +117,58 @@ define(function(require) {
 
   Utilities.requestArtistDuplicates = function(artist) {
     if (artist === undefined) {
-      throw new Error('Artist is not defined');
+      throw new TypeError('Artist is not defined');
     }
 
-    var duplicates = Storage.getArtistDuplicates(artist);
-    if (duplicates !== null) {
-      var deferred = new $.Deferred();
-
-      // The request is expected to be async.
-      setTimeout(function() {
-        deferred.resolveWith(null, [{
-          duplicates: JSON.parse(duplicates)
-        }]);
-      }, 100);
-      return deferred.promise();
+    var stored = Storage.getArtistDuplicates(artist, true);
+    if (stored !== null) {
+      return Promise.resolve(stored);
     }
 
-
-    var jqXHR = $.ajax({
-      url: '/artist-duplicates',
-      type: 'get',
-      data: {
-        artist: encodeURIComponent(artist)
-      },
-      dataType: 'json'
-    });
     console.log('Requesting duplicates for', encodeURIComponent(artist));
-
-    // Save to session storage.
-    jqXHR.done(function(data) {
-      var goodResponse = Array.isArray(data.duplicates);
+    var qs = '?artist=' + encodeURIComponent(artist);
+    return fetch('/artist-duplicates' + qs, {
+        credentials: 'include'
+      })
+    .then(Utilities.status)
+    .then(function(json) {
+      // Save to session storage.
+      var goodResponse = Array.isArray(json.duplicates);
 
       if (goodResponse) {
-        console.log('Saving %d duplicates for %s', goodResponse ? data.duplicates.length : -1, data.artist);
-        Storage.setArtistDuplicates(data.artist, data.duplicates);
+        console.log('Saving %d duplicates for %s', json.duplicates.length, json.artist);
+        Storage.setArtistDuplicates(json.artist, json.duplicates);
       } else {
         console.log('No duplicates given for %s', artist);
       }
-    });
 
-    return jqXHR;
+      return json.duplicates;
+    });
   };
 
   Utilities.status = function(response) {
+    var jsonParsing = response.json();
     if (response.status >= 200 && response.status < 300) {
-      return Promise.resolve(response.json());
+      return Promise.resolve(jsonParsing);
     } else {
-      return Promise.reject(response.json());
+      return new Promise(function(resolve, reject) {
+        jsonParsing.then(reject);
+      });
     }
   };
 
   Utilities.requestTopArtists = function(page) {
-    var top = Storage.getTopArtists(page);
+    var stored = Storage.getTopArtists(page);
 
-    if (top !== null) {
-      return new Promise(function(resolve) {
-        // The request is expected to be async.
-        setTimeout(function() {
-          resolve(top);
-        }, 100);
-      });
+    if (stored !== null) {
+      return Promise.resolve(stored);
     }
 
     // last.fm's api isn't zero-based here...
     var qs = '?page=' + (page + 1);
-    return fetch('/top-artists' + qs)
+    return fetch('/top-artists' + qs, {
+        credentials: 'include'
+      })
       .then(Utilities.status)
       .then(function(json) {
         var artists = json.artists;

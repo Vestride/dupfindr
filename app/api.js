@@ -114,7 +114,7 @@ module.exports = function( app ) {
     console.log('remove-track', artist, '-', track);
 
     if ( _.isUndefined(artist) || _.isUndefined(track) || _.isUndefined(timestamp) ) {
-      res.json(400, {
+      res.status(400).json({
         ok: false,
         message: 'Missing required parameters',
         generic: 'Oops, there was a problem.'

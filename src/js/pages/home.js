@@ -61,18 +61,15 @@ define(function(require) {
 
 
   ArtistLoader.prototype.getTopArtists = function(page, cb) {
-    var request = Utilities.requestTopArtists(page);
-
     this.isLoadingArtists = true;
 
-    // Success
-    request.then(function(artists) {
+    Utilities.requestTopArtists(page).then(function(artists) {
       this.populateArtists(artists);
       this.preloadDuplicates(artists);
 
       // Failure
     }.bind(this)).catch(function(err) {
-      this.showTopArtistsFailure(err.message || err.generic);
+      this.showTopArtistsFailure(err.message);
 
       // Always
     }.bind(this)).then(function() {
@@ -146,23 +143,21 @@ define(function(require) {
     $card.attr('data-duplicates', duplicates.length);
   };
 
-  ArtistLoader.prototype.displayArtistLoadFailure = function(artist, obj) {
-    var message = obj.message || obj.generic;
+  ArtistLoader.prototype.displayArtistLoadFailure = function(artist, message) {
     var $card = this.getArtistCard(artist);
     $card.find('.artist-card__error').attr('title', message).removeClass(Utilities.ClassName.HIDDEN);
   };
 
 
   ArtistLoader.prototype.getArtistDuplicates = function(artist) {
-    var wait = Utilities.requestArtistDuplicates(artist);
+    Utilities.requestArtistDuplicates(artist).then(function(duplicates) {
+      this.displayDuplicatesForArtist(artist, duplicates);
 
-    wait.done(function(data) {
-      this.displayDuplicatesForArtist(artist, data.duplicates);
-    }.bind(this)).fail(function(jqXHR, status, statusText) {
-      var data = jqXHR.responseJSON || JSON.parse(jqXHR.responseText || '""');
-      console.error('getting ' + artist + ' failed - ' + statusText + ' - ' + data.message);
-      this.displayArtistLoadFailure(artist, data);
-    }.bind(this)).always(function() {
+    }.bind(this)).catch(function(err) {
+      console.error('getting ' + artist + ' failed - ' + err.message);
+      this.displayArtistLoadFailure(artist, err.message);
+
+    }.bind(this)).then(function() {
       this.getArtistCard(artist).removeClass('artist-card--loading');
     }.bind(this));
   };

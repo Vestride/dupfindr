@@ -8,21 +8,16 @@ define(function(require) {
   var $loadingMsg = $('.list-loading-msg');
   var artist = $loadingMsg.data('artist');
 
-  function showContent(data, textStatus, jqXHR) {
-    // This should always be an array. If it's not, show an error message.
-    if ( !data || !data.duplicates ) {
-      showError(jqXHR);
-      return;
-    }
-
-    var dups = data.duplicates;
-    var hasDuplicates = dups.length > 0;
+  function showContent(duplicates) {
+    var hasDuplicates = duplicates.length > 0;
     var selector = hasDuplicates ? '.list-duplicates' : '.no-duplicates';
 
     $(selector).removeClass( Utilities.ClassName.HIDDEN );
 
     if ( hasDuplicates ) {
-      var html = tableTemplate(data);
+      var html = tableTemplate({
+        duplicates: duplicates
+      });
       var $trackRemover = $('.js-track-remover');
       $trackRemover.html( html );
       new TrackRemover( $trackRemover[0] );
@@ -32,14 +27,13 @@ define(function(require) {
     $loadingMsg = null;
   }
 
-  function showError(jqXHR) {
-    var data = JSON.parse( jqXHR.responseText || '""' );
-    $loadingMsg.find('.loading-title').text(data.generic);
-    $loadingMsg.find('.error-placeholder').text(data.message);
+  function showError(error) {
+    $loadingMsg.find('.loading-title').text(error.generic);
+    $loadingMsg.find('.error-placeholder').text(error.message);
     $loadingMsg.find('.duplicates-loader').addClass(Utilities.ClassName.HIDDEN);
   }
 
-  var wait = Utilities.requestArtistDuplicates( artist );
-  wait.done(showContent);
-  wait.fail(showError);
+  Utilities.requestArtistDuplicates( artist )
+    .then(showContent)
+    .catch(showError);
 });

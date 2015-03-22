@@ -66,47 +66,33 @@ define(function(require) {
       return;
     }
 
-    var encodedData = _.mapValues(trackData, function(value) {
-      return encodeURIComponent(value);
-    });
-
     this.showLoadingState( buttonEl );
 
-    var self = this;
-    return $.ajax({
-      url: 'remove-track',
-      type: 'post',
-      data: encodedData,
-      dataType: 'json'
-    }).done(function( data ) {
-      console.log(data);
-      self.removeRow( $(buttonEl).closest('li') );
-      $(self).trigger('trackremoved', [trackData]);
-    }).fail(function(jqXHR, status, statusText) {
-      var data = jqXHR.responseJSON || JSON.parse( jqXHR.responseText || '""' );
-      console.log('remove track failed - ' + statusText + ' - ' + data.message);
-    }).always(function() {
-      self.hideLoadingState( buttonEl );
+    // Build query string.
+    var s = [];
+    _.each(trackData, function(value, key) {
+      s[s.length] = encodeURIComponent(key) + '=' + encodeURIComponent(value);
     });
 
-
-    // Testing deferreds.
-    // var self = this;
-    // var dfd = new $.Deferred();
-    // dfd.done(function() {
-    //   self.removeRow( $(buttonEl).closest('li') );
-    //   $(self).trigger('trackremoved', [trackData]);
-    // }).fail(function(jqXHR, status, statusText) {
-    //   console.log('remove track failed: ' + status + ' - ' + statusText);
-    // }).always(function() {
-    //   self.hideLoadingState( buttonEl );
-    // });
-
-    // setTimeout(function() {
-    //   dfd.resolve();
-    // }, Math.random() * 500);
-
-    // return dfd;
+    var _this = this;
+    return fetch('/remove-track', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      credentials: 'include',
+      body: s.join('&').replace(/%20/g, '+')
+    })
+    .then(Utilities.status)
+    .then(function( data ) {
+      console.log(data);
+      _this.removeRow( $(buttonEl).closest('li') );
+      $(_this).trigger('trackremoved', [trackData]);
+    }).catch(function(err) {
+      console.error('remove track failed - ' + err.message);
+    }).then(function() {
+      _this.hideLoadingState( buttonEl );
+    });
   };
 
 
