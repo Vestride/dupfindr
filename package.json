@@ -1,8 +1,12 @@
 {
   "name": "dupfindr",
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "private": true,
   "description": "Locate and delete duplicate scrobbles from Last.fm",
   "main": "Gruntfile.js",
+  "engines": {
+    "node": "0.10.x"
+  },
   "dependencies": {
     "MD5": "^1.2.1",
     "body-parser": "^1.11.0",
