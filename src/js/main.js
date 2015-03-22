@@ -5,7 +5,8 @@ requirejs.config({
     jquery: '//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min',
     promise: 'libs/promise',
     underscore: 'libs/underscore',
-    jade: 'libs/runtime'
+    jade: 'libs/runtime',
+    'socket.io': 'libs/socket.io'
   }
 });
 
@@ -24,3 +25,15 @@ require(['promise'], function(Promise) {
 if (document.documentElement.style.objectFit !== undefined) {
   document.documentElement.classList.add('objectfit');
 }
+
+define('socket', ['socket.io'], function(io) {
+  var socket = io({
+    transports: ['websocket'],
+    // transports: ['polling'],
+    autoConnect: true
+  });
+
+  // socket.open();
+
+  return socket;
+});

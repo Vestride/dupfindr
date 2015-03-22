@@ -1,4 +1,3 @@
-var path = require('path');
 var common = require('./common');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
@@ -13,10 +12,10 @@ module.exports = function(express, app) {
   app.use(express.static(common.directory + 'public'));
 
   // Parse application/x-www-form-urlencoded
-  app.use(bodyParser.urlencoded({ extended: true }))
+  app.use(bodyParser.urlencoded({ extended: true }));
 
   // Parse application/json
-  app.use(bodyParser.json())
+  app.use(bodyParser.json());
 
   app.use(cookieParser('scrobblescrewups'));
 

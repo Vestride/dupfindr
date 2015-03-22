@@ -32,7 +32,7 @@ function restrict(req, res, next) {
         console.log(err);
       }
 
-      console.log('Got ' + user.username + ' from database. Setting session variabes');
+      console.log('Got ' + user.username + ' from database. Setting session variables');
       updateSession(req.session, user);
 
       next();

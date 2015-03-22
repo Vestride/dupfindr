@@ -1,6 +1,13 @@
 define(function(require) {
   var Settings = require('settings');
   var Storage = require('storage');
+  var socket = require('socket');
+
+  socket.on('later', function() {
+    console.log('it is later');
+  });
+
+  socket.emit('bar', 'foo');
 
   var Utilities = {};
 
@@ -114,43 +121,36 @@ define(function(require) {
     return windowHeight;
   };
 
+  Utilities.waitForEvent = function(eventName) {
+    return function() {
+      return new Promise(function(resolve) {
+        console.log('wait for socket event');
+        console.log(Date.now());
+        socket.once(eventName, function(data) {
+          console.log('received socket event', data);
+          // socket.off(eventName, callback);
+          resolve(data);
+        });
+      });
+    };
+  };
 
-  Utilities.requestArtistDuplicates = function(artist) {
-    if (artist === undefined) {
-      throw new TypeError('Artist is not defined');
+  Utilities.apiStatus = function(data) {
+    console.log('api status:', data);
+    if (data.ok) {
+      return Promise.resolve(data);
+    } else {
+      return Promise.reject(data);
     }
-
-    var stored = Storage.getArtistDuplicates(artist, true);
-    if (stored !== null) {
-      return Promise.resolve(stored);
-    }
-
-    console.log('Requesting duplicates for', encodeURIComponent(artist));
-    var qs = '?artist=' + encodeURIComponent(artist);
-    return fetch('/artist-duplicates' + qs, {
-        credentials: 'include'
-      })
-    .then(Utilities.status)
-    .then(function(json) {
-      // Save to session storage.
-      var goodResponse = Array.isArray(json.duplicates);
-
-      if (goodResponse) {
-        console.log('Saving %d duplicates for %s', json.duplicates.length, json.artist);
-        Storage.setArtistDuplicates(json.artist, json.duplicates);
-      } else {
-        console.log('No duplicates given for %s', artist);
-      }
-
-      return json.duplicates;
-    });
   };
 
   Utilities.status = function(response) {
     var jsonParsing = response.json();
     if (response.status >= 200 && response.status < 300) {
+      console.log('Response status is good:', response.status);
       return Promise.resolve(jsonParsing);
     } else {
+      console.log('bad status:', response.status);
       return new Promise(function(resolve, reject) {
         jsonParsing.then(reject);
       });
@@ -175,6 +175,40 @@ define(function(require) {
         Storage.setTopArtists(artists);
         return artists;
       });
+  };
+
+
+  Utilities.requestArtistDuplicates = function(artist) {
+    if (artist === undefined) {
+      throw new TypeError('Artist is not defined');
+    }
+
+    var stored = Storage.getArtistDuplicates(artist, true);
+    if (stored !== null) {
+      return Promise.resolve(stored);
+    }
+
+    console.log('Requesting duplicates for', encodeURIComponent(artist));
+    var qs = '?artist=' + encodeURIComponent(artist);
+    return fetch('/artist-duplicates' + qs, {
+      credentials: 'include'
+    })
+    .then(Utilities.status)
+    .then(Utilities.waitForEvent('artist-duplicates'))
+    .then(Utilities.apiStatus)
+    .then(function(json) {
+      // Save to session storage.
+      var goodResponse = Array.isArray(json.duplicates);
+
+      if (goodResponse) {
+        console.log('Saving %d duplicates for %s', json.duplicates.length, json.artist);
+        Storage.setArtistDuplicates(json.artist, json.duplicates);
+      } else {
+        console.log('No duplicates given for %s', artist);
+      }
+
+      return json.duplicates;
+    });
   };
 
 

@@ -1,14 +1,34 @@
 
-var fs = require('fs');
+// var fs = require('fs');
 var _ = require('underscore');
-var common = require('./common');
+// var common = require('./common');
 var lastfm = require('./lastfm');
 var user = require('./user');
 var helpers = require('./helpers');
 
 
-module.exports = function( app ) {
+module.exports = function( app, io ) {
+  console.log('listen for connection');
 
+  io.on('connection', function(socket) {
+    console.log('A user connected', socket.id);
+
+    socket.on('disconnect', function() {
+      console.log('user disconnected', this.id);
+    });
+
+    socket.on('bar', function() {
+      console.log('bar:', this.id);
+    });
+
+    // setTimeout(function() {
+    //   socket.emit('later', 'hi');
+    // }, 500);
+  });
+
+  // app.io.route('bar', function(req) {
+  //   console.log('bar:', req.session.username);
+  // });
 
   app.get('/top-artists', user.restrict, function(req, res) {
     var page = req.query.page || 1;
@@ -69,6 +89,12 @@ module.exports = function( app ) {
       // page: 2
     };
 
+    var requestSentTime = Date.now();
+
+    res.status(200).json({
+      message: 'Waiting for last.fm'
+    });
+
     // TODO(glen): See if there are any duplicate tracks stored in the database.
     // If there are, get those and request tracks from that timestamp until now.
     // If there aren't, request all tracks.
@@ -76,10 +102,62 @@ module.exports = function( app ) {
     // updated and if the user removes the scrobble from somewhere else, the
     // database has no way of knowing that...
 
+    // setTimeout(function() {
+    //   // CONNECTION NOW CLOSED
+    //   console.log('my async socket:', socket.id);
+    //   console.log('socket connected:', socket.connected, '. connection readyState:', socket.conn.readyState);
+    //   socket.emit('artist-duplicates', {
+    //     ok: false,
+    //     generic: 'Oops, there was a problem.'
+    //   });
+
+    //   // console.log(Date.now());
+    //   // io.emit('artist-duplicates', {
+    //   //   ok: false,
+    //   //   generic: 'Oops, there was a problem.'
+    //   // });
+
+    //   // io.emit('later', 'to you');
+
+    // }, 100);
+
+    // setTimeout(function() {
+    //   // CONNECTION NOW CLOSED
+    //   console.log('my async socket:', socket.id);
+    //   console.log('socket connected:', socket.connected, '. connection readyState:', socket.conn.readyState);
+    //   socket.emit('artist-duplicates', {
+    //     ok: false,
+    //     generic: 'Oops, there was a problem.'
+    //   });
+
+    //   // console.log(Date.now());
+    //   // io.emit('artist-duplicates', {
+    //   //   ok: false,
+    //   //   generic: 'Oops, there was a problem.'
+    //   // });
+
+    //   // io.emit('later', 'to you');
+
+    // }, 100);
+    /*
     lastfm.request(params, function(err, result) {
 
+      console.log('Request for ' + artist + ' took ' +
+        ((Date.now() - requestSentTime) / 1000).toFixed(2) + ' seconds.');
+
       if ( err || !(result && result.artisttracks && result.artisttracks.track) ) {
-        res.status(lastfm.getHttpErrorCode(err)).json({
+        console.log('something wrong');
+        if (result && result.artisttracks && !result.artisttracks.track) {
+          result.message = 'You have not scrobbled any tracks by ' + artist;
+        }
+        // res.status(lastfm.getHttpErrorCode(err)).json({
+        //   ok: false,
+        //   err: err,
+        //   message: result.message,
+        //   generic: 'Oops, there was a problem.'
+        // });
+        socket.emit('artist-duplicates', {
+          status: lastfm.getHttpErrorCode(err),
           ok: false,
           err: err,
           message: result.message,
@@ -96,12 +174,20 @@ module.exports = function( app ) {
       console.log('Total tracks by ' + artist + ' = ' + tracks.length);
       console.log('duplicates: ' + duplicates.length);
 
-      res.json({
+      // res.json({
+      //   user: username,
+      //   artist: artist,
+      //   duplicates: duplicates
+      // });
+
+      console.log('socket connected:', socket.connected, '. connection readyState:', socket.conn.readyState);
+      socket.emit('artist-duplicates', {
         user: username,
         artist: artist,
         duplicates: duplicates
       });
     });
+    */
   });
 
 
@@ -142,5 +228,6 @@ module.exports = function( app ) {
       res.status(lastfm.getHttpErrorCode(err)).json(resp);
     });
   });
+
 
 };
