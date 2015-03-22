@@ -2,8 +2,8 @@
  * @fileoverview Things that deal with the Last.fm API.
  */
 
-var debug = require('debug')('dupfinder:lastfm');
-var error = require('debug')('dupfinder:error');
+var debug = require('debug')('dupfindr:lastfm');
+var error = require('debug')('dupfindr:error');
 var common = require('./common');
 var _ = require('underscore');
 var request = require('request');

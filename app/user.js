@@ -1,5 +1,5 @@
 // user.js
-var debug = require('debug')('dupfinder:auth');
+var debug = require('debug')('dupfindr:auth');
 var common = require('./common');
 var lastfm = require('./lastfm');
 var db = require('./database').getDatabase();

@@ -1,7 +1,7 @@
 
 // var fs = require('fs');
-var debug = require('debug')('dupfinder:api');
-var error = require('debug')('dupfinder:error');
+var debug = require('debug')('dupfindr:api');
+var error = require('debug')('dupfindr:error');
 var _ = require('underscore');
 // var common = require('./common');
 var lastfm = require('./lastfm');

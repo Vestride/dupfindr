@@ -27,13 +27,8 @@ if (document.documentElement.style.objectFit !== undefined) {
 }
 
 define('socket', ['socket.io'], function(io) {
-  var socket = io({
+  return io({
     transports: ['websocket'],
-    // transports: ['polling'],
     autoConnect: true
   });
-
-  // socket.open();
-
-  return socket;
 });
