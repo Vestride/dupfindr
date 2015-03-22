@@ -1,4 +1,5 @@
 // user.js
+var debug = require('debug')('dupfinder:auth');
 var common = require('./common');
 var lastfm = require('./lastfm');
 var db = require('./database').getDatabase();
@@ -11,28 +12,28 @@ function updateSession(session, user) {
 
 
 function restrict(req, res, next) {
-  console.log('---restrict---');
-  console.log('Cookies:', req.signedCookies);
+  debug('---restrict---');
+  debug('Cookies: %o', req.signedCookies);
 
   // Session key available. The user has authorized our app.
   if (req.session.sk) {
-    console.log('session key available on session object');
+    debug('session key available on session object');
     next();
 
   // New session, but they've authenticated before.
   } else if (req.signedCookies.username) {
-    console.log('new session, but they have authenticated before');
+    debug('new session, but they have authenticated before');
     var collection = db.collection('users');
 
     collection.findOne({
       username: req.signedCookies.username
     }, function(err, user) {
       if (err) {
-        console.log('error getting ' + req.signedCookies.username);
-        console.log(err);
+        debug('error getting ' + req.signedCookies.username);
+        debug(err);
       }
 
-      console.log('Got ' + user.username + ' from database. Setting session variables');
+      debug('Got ' + user.username + ' from database. Setting session variables');
       updateSession(req.session, user);
 
       next();
@@ -42,7 +43,7 @@ function restrict(req, res, next) {
   // The token is available after the user authorizes the app,
   // but the session isn't available yet.
   } else if (req.session.token) {
-    // console.log('session has token, get the session key from lastfm');
+    // debug('session has token, get the session key from lastfm');
 
     // Make the request to Last.fm for the session.
     lastfm.request({
@@ -81,8 +82,8 @@ function restrict(req, res, next) {
           w: 1
         }, function(err /*, result*/ ) {
           if (err) {
-            console.log('error updating recored for:', doc);
-            console.log(err);
+            debug('error updating recored for:', doc);
+            debug(err);
           }
         });
 
@@ -92,7 +93,7 @@ function restrict(req, res, next) {
 
   // User needs to authenticate the app.
   } else {
-    console.log('User needs to authenticate the app');
+    debug('User needs to authenticate the app');
     // req.session.error = 'Access denied!';
     res.redirect('/needs-authentication');
   }

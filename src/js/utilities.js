@@ -3,11 +3,11 @@ define(function(require) {
   var Storage = require('storage');
   var socket = require('socket');
 
-  socket.on('later', function() {
-    console.log('it is later');
-  });
+  // socket.on('later', function() {
+  //   console.log('it is later');
+  // });
 
-  socket.emit('bar', 'foo');
+  // socket.emit('bar', 'foo');
 
   var Utilities = {};
 
@@ -124,33 +124,24 @@ define(function(require) {
   Utilities.waitForEvent = function(eventName) {
     return function() {
       return new Promise(function(resolve) {
-        console.log('wait for socket event');
-        console.log(Date.now());
-        socket.once(eventName, function(data) {
-          console.log('received socket event', data);
-          // socket.off(eventName, callback);
-          resolve(data);
-        });
+        socket.once(eventName, resolve);
       });
     };
   };
 
   Utilities.apiStatus = function(data) {
-    console.log('api status:', data);
-    if (data.ok) {
-      return Promise.resolve(data);
-    } else {
+    if (data.ok === false) {
       return Promise.reject(data);
+    } else {
+      return Promise.resolve(data);
     }
   };
 
   Utilities.status = function(response) {
     var jsonParsing = response.json();
     if (response.status >= 200 && response.status < 300) {
-      console.log('Response status is good:', response.status);
       return Promise.resolve(jsonParsing);
     } else {
-      console.log('bad status:', response.status);
       return new Promise(function(resolve, reject) {
         jsonParsing.then(reject);
       });
@@ -194,7 +185,7 @@ define(function(require) {
       credentials: 'include'
     })
     .then(Utilities.status)
-    .then(Utilities.waitForEvent('artist-duplicates'))
+    .then(Utilities.waitForEvent('artist-duplicates_' + artist))
     .then(Utilities.apiStatus)
     .then(function(json) {
       // Save to session storage.

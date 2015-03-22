@@ -1,36 +1,47 @@
 
 // var fs = require('fs');
+var debug = require('debug')('dupfinder:api');
+var error = require('debug')('dupfinder:error');
 var _ = require('underscore');
 // var common = require('./common');
 var lastfm = require('./lastfm');
 var user = require('./user');
 var helpers = require('./helpers');
 
-
-module.exports = function( app, io ) {
-  console.log('listen for connection');
-
-  io.on('connection', function(socket) {
-    console.log('A user connected', socket.id);
-
-    socket.on('disconnect', function() {
-      console.log('user disconnected', this.id);
-    });
-
-    socket.on('bar', function() {
-      console.log('bar:', this.id);
-    });
-
-    // setTimeout(function() {
-    //   socket.emit('later', 'hi');
-    // }, 500);
+module.exports = function( app ) {
+  app.io.on('connection', function(socket) {
+    // console.log('A user connected', socket.id);
   });
 
-  // app.io.route('bar', function(req) {
-  //   console.log('bar:', req.session.username);
+  app.io.route('error', function(socket, data) {
+    console.log('error', socket.id, data);
+  });
+
+  app.io.route('disconnect', function(socket, data) {
+    // TODO abort all active requests.
+    console.log('user disconnected', socket.id, data);
+  });
+
+  // app.io.route('bar', function(socket, data) {
+  //   console.log('bar:', socket.session.username, data);
   // });
 
+  function getConnectedSocket() {
+    var s;
+    var sockets = app.io.sockets.sockets;
+    sockets.some(function(socket) {
+      if (socket.connected) {
+        s = socket;
+      }
+
+      return socket.connected;
+    });
+    return s;
+  }
+
   app.get('/top-artists', user.restrict, function(req, res) {
+    debug('Get top artists');
+
     var page = req.query.page || 1;
     var params = {
       user: req.session.username,
@@ -69,7 +80,7 @@ module.exports = function( app, io ) {
   app.get('/artist-duplicates', user.restrict, function(req, res) {
 
     var artist = decodeURIComponent(req.query.artist);
-    console.log('get:', artist);
+    debug('get: ' + artist);
 
     if ( !artist || artist === 'null' || artist === 'undefined' ) {
       res.status(400).json({
@@ -102,61 +113,28 @@ module.exports = function( app, io ) {
     // updated and if the user removes the scrobble from somewhere else, the
     // database has no way of knowing that...
 
-    // setTimeout(function() {
-    //   // CONNECTION NOW CLOSED
-    //   console.log('my async socket:', socket.id);
-    //   console.log('socket connected:', socket.connected, '. connection readyState:', socket.conn.readyState);
-    //   socket.emit('artist-duplicates', {
-    //     ok: false,
-    //     generic: 'Oops, there was a problem.'
-    //   });
-
-    //   // console.log(Date.now());
-    //   // io.emit('artist-duplicates', {
-    //   //   ok: false,
-    //   //   generic: 'Oops, there was a problem.'
-    //   // });
-
-    //   // io.emit('later', 'to you');
-
-    // }, 100);
-
-    // setTimeout(function() {
-    //   // CONNECTION NOW CLOSED
-    //   console.log('my async socket:', socket.id);
-    //   console.log('socket connected:', socket.connected, '. connection readyState:', socket.conn.readyState);
-    //   socket.emit('artist-duplicates', {
-    //     ok: false,
-    //     generic: 'Oops, there was a problem.'
-    //   });
-
-    //   // console.log(Date.now());
-    //   // io.emit('artist-duplicates', {
-    //   //   ok: false,
-    //   //   generic: 'Oops, there was a problem.'
-    //   // });
-
-    //   // io.emit('later', 'to you');
-
-    // }, 100);
-    /*
     lastfm.request(params, function(err, result) {
 
-      console.log('Request for ' + artist + ' took ' +
+      debug('Request for ' + artist + ' took ' +
         ((Date.now() - requestSentTime) / 1000).toFixed(2) + ' seconds.');
 
+      var socket = getConnectedSocket();
+
+      // Bail if there is no socket to send events to.
+      if (!socket) {
+        error('No connected sockets found');
+        return;
+      }
+
+      var socketEvent = 'artist-duplicates_' + artist;
+
       if ( err || !(result && result.artisttracks && result.artisttracks.track) ) {
-        console.log('something wrong');
+        error('%o %o', err, result);
         if (result && result.artisttracks && !result.artisttracks.track) {
+          console.log(result.artisttracks.track, result.artisttracks.items);
           result.message = 'You have not scrobbled any tracks by ' + artist;
         }
-        // res.status(lastfm.getHttpErrorCode(err)).json({
-        //   ok: false,
-        //   err: err,
-        //   message: result.message,
-        //   generic: 'Oops, there was a problem.'
-        // });
-        socket.emit('artist-duplicates', {
+        socket.emit(socketEvent, {
           status: lastfm.getHttpErrorCode(err),
           ok: false,
           err: err,
@@ -171,23 +149,16 @@ module.exports = function( app, io ) {
       helpers.augmentTrackData(duplicates, username);
 
       // TODO(glen) check tracks.length against the total in top artists.
-      console.log('Total tracks by ' + artist + ' = ' + tracks.length);
-      console.log('duplicates: ' + duplicates.length);
+      debug('Total tracks by ' + artist + ' = ' + tracks.length);
+      debug('duplicates: ' + duplicates.length);
 
-      // res.json({
-      //   user: username,
-      //   artist: artist,
-      //   duplicates: duplicates
-      // });
-
-      console.log('socket connected:', socket.connected, '. connection readyState:', socket.conn.readyState);
-      socket.emit('artist-duplicates', {
+      socket.emit(socketEvent, {
         user: username,
         artist: artist,
         duplicates: duplicates
       });
     });
-    */
+
   });
 
 
@@ -197,7 +168,7 @@ module.exports = function( app, io ) {
     var artist = decodeURIComponent(req.body.artist);
     var track = decodeURIComponent(req.body.track);
     var timestamp = decodeURIComponent(req.body.timestamp);
-    console.log('remove-track', artist, '-', track);
+    debug('remove-track ' + artist + ' - ' + track);
 
     if ( _.isUndefined(artist) || _.isUndefined(track) || _.isUndefined(timestamp) ) {
       res.status(400).json({

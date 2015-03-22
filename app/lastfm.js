@@ -2,6 +2,8 @@
  * @fileoverview Things that deal with the Last.fm API.
  */
 
+var debug = require('debug')('dupfinder:lastfm');
+var error = require('debug')('dupfinder:error');
 var common = require('./common');
 var _ = require('underscore');
 var request = require('request');
@@ -59,17 +61,17 @@ exports.request = function(params, fn) {
     options.qs = requestParams;
   }
 
-  // console.log(options.method.toUpperCase() + ':', options);
+  // debug(options.method.toUpperCase() + ':', options);
 
   function callback(err, response, body) {
     var result = {};
 
     if (body) {
-      var resp = body.length > 140 ? body.substring(0, 140).replace(/\n/g, '') + '...' : body;
+      var resp = body.length > 140 ? body.substring(0, 140).replace(/\n/g, '') + '...' : body.trim();
       var copy = params.artist ?
         'last.fm response for [' + params.artist + ']' :
         'last.fm response:';
-      console.log(copy, resp);
+      debug(copy + '\n\t' + resp);
 
       // Parse JSON from Last.fm
       try {
@@ -77,7 +79,7 @@ exports.request = function(params, fn) {
       } catch (e) {
         // See if there was a response code from last.fm (like 500 or 503)
         if (response && response.responseCode) {
-          console.error(response.responseCode);
+          error(response.responseCode);
           result.error = response.responseCode;
         }
 
@@ -89,17 +91,17 @@ exports.request = function(params, fn) {
         }
       }
     } else {
-      console.log('no last.fm response');
+      debug('no last.fm response');
     }
 
     if (err) {
-      console.log('request error:', err);
+      debug('request error:', err);
       result.error = err.code;
     }
 
     if (result.error) {
       result.message = exports.getErrorMessage(result.error);
-      console.error(result.message);
+      error(result.message);
       fn(result.error, result);
 
     } else {
@@ -136,7 +138,7 @@ exports.getApiSignature = function(params) {
   // Append secret to the request rul.
   var signature = paramsList + common.SECRET;
 
-  console.log('params list:', paramsList);
+  debug('params list:', paramsList);
 
   // Hash it and return.
   return md5(signature);
