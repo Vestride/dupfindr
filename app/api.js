@@ -1,4 +1,3 @@
-
 // var fs = require('fs');
 var debug = require('debug')('dupfindr:api');
 var error = require('debug')('dupfindr:error');
@@ -8,7 +7,7 @@ var lastfm = require('./lastfm');
 var user = require('./user');
 var helpers = require('./helpers');
 
-module.exports = function( app ) {
+module.exports = function(app) {
   app.io.on('connection', function(socket) {
     // console.log('A user connected', socket.id);
   });
@@ -36,6 +35,7 @@ module.exports = function( app ) {
 
       return socket.connected;
     });
+
     return s;
   }
 
@@ -51,9 +51,9 @@ module.exports = function( app ) {
     };
 
     lastfm.request(params, function(err, result) {
-    // fs.readFile('./test/topartists.json', function (err, data) {
-    //   var result = JSON.parse(data);
-      if ( err ) {
+      // fs.readFile('./test/topartists.json', function (err, data) {
+      //   var result = JSON.parse(data);
+      if (err) {
         res.status(lastfm.getHttpErrorCode(err)).json({
           ok: false,
           err: err,
@@ -82,7 +82,7 @@ module.exports = function( app ) {
     var artist = decodeURIComponent(req.query.artist);
     debug('get: ' + artist);
 
-    if ( !artist || artist === 'null' || artist === 'undefined' ) {
+    if (!artist || artist === 'null' || artist === 'undefined') {
       res.status(400).json({
         ok: false,
         message: 'No artist given',
@@ -128,12 +128,8 @@ module.exports = function( app ) {
 
       var socketEvent = 'artist-duplicates_' + artist;
 
-      if ( err || !(result && result.artisttracks && result.artisttracks.track) ) {
-        error('%o %o', err, result);
-        if (result && result.artisttracks && !result.artisttracks.track) {
-          console.log(result.artisttracks.track, result.artisttracks.items);
-          result.message = 'You have not scrobbled any tracks by ' + artist;
-        }
+      if (err || !(result && result.artisttracks && result.artisttracks.track)) {
+        error('Last.fm result %o %o', err, result);
         socket.emit(socketEvent, {
           status: lastfm.getHttpErrorCode(err),
           ok: false,
@@ -170,7 +166,7 @@ module.exports = function( app ) {
     var timestamp = decodeURIComponent(req.body.timestamp);
     debug('remove-track ' + artist + ' - ' + track);
 
-    if ( _.isUndefined(artist) || _.isUndefined(track) || _.isUndefined(timestamp) ) {
+    if (_.isUndefined(artist) || _.isUndefined(track) || _.isUndefined(timestamp)) {
       res.status(400).json({
         ok: false,
         message: 'Missing required parameters',
@@ -189,8 +185,10 @@ module.exports = function( app ) {
     };
 
     lastfm.request(params, function(err, result) {
-      var resp = { ok: true };
-      if ( err ) {
+      var resp = {
+        ok: true
+      };
+      if (err) {
         resp.ok = false;
         resp.message = result.message;
       }
@@ -199,6 +197,4 @@ module.exports = function( app ) {
       res.status(lastfm.getHttpErrorCode(err)).json(resp);
     });
   });
-
-
 };

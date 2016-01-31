@@ -49,9 +49,7 @@ gulp.task('copy-js', function() {
 gulp.task('assets', ['copy-bower', 'copy-src', 'copy-js']);
 
 gulp.task('clean', function(cb) {
-  del(['public'], function() {
-    cb();
-  });
+  return del(['public']);
 });
 
 gulp.task('jade', function() {

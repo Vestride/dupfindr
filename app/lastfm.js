@@ -7,7 +7,7 @@ var error = require('debug')('dupfindr:error');
 var common = require('./common');
 var _ = require('underscore');
 var request = require('request');
-var md5 = require('MD5');
+var md5 = require('md5');
 
 // https://github.com/jammus/lastfm-node/blob/master/lib/lastfm/lastfm-request.js
 var WRITE_METHODS = [
